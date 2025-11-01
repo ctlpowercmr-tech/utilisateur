@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paiement Boissons - CTL User</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>MON COMPTE CTL</h1>
+            <div class="solde-utilisateur">
+                Solde: <span id="solde-utilisateur">0.00</span>€
+            </div>
+        </header>
+
+        <main>
+            <section class="scanner-section" id="scanner-section">
+                <h2>SCANNER LE CODE QR</h2>
+                <div class="scanner-container">
+                    <div class="scanner-frame">
+                        <video id="camera-feed" width="300" height="300" autoplay playsinline></video>
+                        <div class="scanner-overlay"></div>
+                    </div>
+                    <p>ou saisir manuellement l'ID de transaction:</p>
+                    <div class="input-group">
+                        <input type="text" id="transaction-id" placeholder="ID de transaction">
+                        <button id="btn-charger-transaction" class="btn-charger">Charger</button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="transaction-section" id="transaction-section">
+                <h2>DÉTAILS DE LA TRANSACTION</h2>
+                <div class="transaction-details">
+                    <div class="transaction-info">
+                        <p>ID: <span id="detail-transaction-id">-</span></p>
+                        <p>Montant: <span id="detail-montant">0.00</span>€</p>
+                        <p>Statut: <span id="detail-statut">-</span></p>
+                    </div>
+                    
+                    <div class="boissons-transaction">
+                        <h3>Boissons sélectionnées:</h3>
+                        <div id="liste-boissons" class="liste-boissons">
+                            <!-- Liste des boissons -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="actions-paiement">
+                    <button id="btn-payer" class="btn-confirmer-paiement">Confirmer le Paiement</button>
+                    <button id="btn-annuler" class="btn-annuler-transaction">Annuler</button>
+                </div>
+
+                <div class="confirmation-paiement" id="confirmation-paiement">
+                    <div class="confirmation-content">
+                        <div class="confirmation-icon">✅</div>
+                        <h3>Paiement Réussi!</h3>
+                        <p>Votre transaction a été traitée avec succès.</p>
+                        <button id="btn-nouvelle-transaction" class="btn-nouvelle">Nouvelle Transaction</button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="historique-section">
+                <h2>HISTORIQUE DES TRANSACTIONS</h2>
+                <div id="historique-transactions" class="historique-list">
+                    <!-- Historique des transactions -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

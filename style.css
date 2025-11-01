@@ -1,0 +1,316 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+h1 {
+    font-size: 1.8rem;
+    margin-bottom: 10px;
+}
+
+.solde-utilisateur {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: #4CAF50;
+}
+
+.scanner-section {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 25px;
+    border-radius: 20px;
+    margin-bottom: 25px;
+    backdrop-filter: blur(10px);
+    text-align: center;
+}
+
+.scanner-container {
+    margin: 20px 0;
+}
+
+.scanner-frame {
+    width: 300px;
+    height: 300px;
+    margin: 0 auto 20px;
+    border: 3px solid rgba(255, 255, 255, 0.5);
+    border-radius: 15px;
+    position: relative;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+#camera-feed {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.scanner-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: 2px solid #4CAF50;
+    box-shadow: inset 0 0 0 2px #4CAF50;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+.input-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+input {
+    flex: 1;
+    padding: 12px 15px;
+    border: none;
+    border-radius: 25px;
+    background: rgba(255, 255, 255, 0.9);
+    font-size: 1rem;
+    text-align: center;
+}
+
+button {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 25px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.btn-charger {
+    background: linear-gradient(45deg, #2196F3, #1976D2);
+    color: white;
+    box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4);
+}
+
+.btn-charger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(33, 150, 243, 0.6);
+}
+
+.transaction-section {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 25px;
+    border-radius: 20px;
+    margin-bottom: 25px;
+    backdrop-filter: blur(10px);
+    animation: slideUp 0.5s ease;
+    display: none;
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.transaction-details {
+    margin: 20px 0;
+}
+
+.transaction-info {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.transaction-info p {
+    margin: 8px 0;
+    font-size: 1.1rem;
+}
+
+.boissons-transaction h3 {
+    margin-bottom: 15px;
+    color: #ffd93d;
+}
+
+.liste-boissons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.item-boisson {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 12px 15px;
+    border-radius: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.actions-paiement {
+    display: flex;
+    gap: 15px;
+    margin: 25px 0;
+}
+
+.btn-confirmer-paiement {
+    flex: 2;
+    background: linear-gradient(45deg, #4CAF50, #45a049);
+    color: white;
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+}
+
+.btn-confirmer-paiement:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(76, 175, 80, 0.6);
+}
+
+.btn-confirmer-paiement:disabled {
+    background: #666;
+    cursor: not-allowed;
+}
+
+.btn-annuler-transaction {
+    flex: 1;
+    background: linear-gradient(45deg, #f44336, #d32f2f);
+    color: white;
+    box-shadow: 0 4px 15px rgba(244, 67, 54, 0.4);
+}
+
+.btn-annuler-transaction:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(244, 67, 54, 0.6);
+}
+
+.confirmation-paiement {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.3s ease;
+}
+
+.confirmation-content {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 30px;
+    border-radius: 20px;
+    text-align: center;
+    max-width: 300px;
+    width: 90%;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    animation: scaleIn 0.3s ease;
+}
+
+@keyframes scaleIn {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.confirmation-icon {
+    font-size: 4rem;
+    margin-bottom: 20px;
+    animation: bounce 0.5s ease;
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-10px); }
+    60% { transform: translateY(-5px); }
+}
+
+.btn-nouvelle {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    margin-top: 15px;
+    width: 100%;
+}
+
+.btn-nouvelle:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+.historique-section {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 25px;
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+}
+
+.historique-list {
+    max-height: 200px;
+    overflow-y: auto;
+    margin-top: 15px;
+}
+
+.transaction-historique {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 12px 15px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.transaction-historique.paye {
+    border-left: 4px solid #4CAF50;
+}
+
+.transaction-historique.annule {
+    border-left: 4px solid #f44336;
+}
+
+.historique-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.historique-list::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+
+.historique-list::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+}
