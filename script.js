@@ -36,20 +36,20 @@ class UtilisateurApp {
             video.srcObject = stream;
             this.cameraActive = true;
             
-            this.scannerQRCode(stream);
+            this.scannerQRCode();
         } catch (error) {
-            console.error('Erreur accès caméra:', error);
-            document.getElementById('scanner-section').innerHTML += 
-                '<p style="color: #ff6b6b; margin-top: 10px;">Impossible d\'accéder à la caméra</p>';
+            console.error('❌ Erreur accès caméra:', error);
+            document.querySelector('.scanner-container').innerHTML += 
+                '<p style="color: #ff6b6b; margin-top: 10px;">📷 Impossible d\'accéder à la caméra. Utilisez la saisie manuelle.</p>';
         }
     }
     
-    scannerQRCode(stream) {
+    scannerQRCode() {
         const video = document.getElementById('camera-feed');
         const canvas = document.createElement('canvas');
         const context = canvas.getContext('2d');
         
-        function scan() {
+        const scanFrame = () => {
             if (video.readyState === video.HAVE_ENOUGH_DATA) {
                 canvas.width = video.videoWidth;
                 canvas.height = video.videoHeight;
@@ -70,9 +70,11 @@ class UtilisateurApp {
                     }
                 }
             }
-            requestAnimationFrame(scan.bind(this));
-        }
-        scan.bind(this)();
+            if (this.cameraActive) {
+                requestAnimationFrame(scanFrame);
+            }
+        };
+        scanFrame();
     }
     
     arreterCamera() {
@@ -90,7 +92,7 @@ class UtilisateurApp {
         const id = transactionId || document.getElementById('transaction-id').value.trim();
         
         if (!id) {
-            alert('Veuillez saisir un ID de transaction');
+            alert('⚠️ Veuillez saisir un ID de transaction');
             return;
         }
         
@@ -102,11 +104,11 @@ class UtilisateurApp {
                 this.transactionActuelle = result.data;
                 this.afficherDetailsTransaction();
             } else {
-                alert('Transaction non trouvée ou expirée');
+                alert('❌ Transaction non trouvée ou expirée');
             }
         } catch (error) {
-            console.error('Erreur:', error);
-            alert('Erreur de connexion au serveur');
+            console.error('❌ Erreur:', error);
+            alert('❌ Erreur de connexion au serveur');
         }
     }
     
@@ -128,8 +130,10 @@ class UtilisateurApp {
         
         if (this.transactionActuelle.statut !== 'en_attente') {
             btnPayer.textContent = 'Transaction ' + this.getStatutText(this.transactionActuelle.statut);
+            btnPayer.style.background = '#666';
         } else {
             btnPayer.textContent = 'Confirmer le Paiement';
+            btnPayer.style.background = '';
         }
     }
     
@@ -174,11 +178,11 @@ class UtilisateurApp {
                 this.ajouterAHistorique(this.transactionActuelle);
                 this.afficherConfirmationPaiement();
             } else {
-                alert('Erreur: ' + result.error);
+                alert('❌ Erreur: ' + result.error);
             }
         } catch (error) {
-            console.error('Erreur:', error);
-            alert('Erreur de connexion au serveur');
+            console.error('❌ Erreur:', error);
+            alert('❌ Erreur de connexion au serveur');
         }
     }
     
@@ -218,7 +222,7 @@ class UtilisateurApp {
                 this.mettreAJourSolde();
             }
         } catch (error) {
-            console.error('Erreur chargement solde:', error);
+            console.error('❌ Erreur chargement solde:', error);
         }
     }
     
@@ -242,6 +246,11 @@ class UtilisateurApp {
     mettreAJourHistorique() {
         const historiqueElement = document.getElementById('historique-transactions');
         historiqueElement.innerHTML = '';
+        
+        if (this.historique.length === 0) {
+            historiqueElement.innerHTML = '<div style="text-align: center; opacity: 0.7; padding: 20px;">Aucune transaction récente</div>';
+            return;
+        }
         
         this.historique.forEach(transaction => {
             const item = document.createElement('div');
