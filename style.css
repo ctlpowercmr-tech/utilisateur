@@ -19,12 +19,13 @@ body {
 
 header {
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 30px;
     padding: 20px;
     background: rgba(255, 255, 255, 0.1);
     border-radius: 20px;
     backdrop-filter: blur(10px);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    position: relative;
 }
 
 h1 {
@@ -36,50 +37,66 @@ h1 {
     font-size: 1.3rem;
     font-weight: bold;
     color: #4CAF50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
 }
 
-/* SECTION RECHARGE */
+.btn-recharger {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* NOUVEAUX STYLES POUR LA SECTION RECHARGE */
 .recharge-section {
     background: rgba(255, 255, 255, 0.1);
-    padding: 20px;
+    padding: 25px;
     border-radius: 20px;
-    margin-bottom: 20px;
+    margin-bottom: 25px;
     backdrop-filter: blur(10px);
     text-align: center;
+    display: none;
 }
 
 .recharge-options {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin: 15px 0;
+    gap: 15px;
+    margin: 20px 0;
 }
 
-.btn-recharge {
-    padding: 15px;
-    border: none;
+.montant-rapide {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 20px;
     border-radius: 15px;
-    background: linear-gradient(45deg, #4CAF50, #45a049);
-    color: white;
-    font-weight: bold;
-    font-size: 1.1rem;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+    font-size: 1.2rem;
+    font-weight: bold;
 }
 
-.btn-recharge:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(76, 175, 80, 0.5);
+.montant-rapide:hover {
+    background: rgba(76, 175, 80, 0.3);
+    transform: scale(1.05);
 }
 
-.recharge-personnalisee {
+.montant-personnalise {
     display: flex;
     gap: 10px;
-    margin-top: 15px;
+    margin: 20px 0;
 }
 
-#montant-personnalise {
+.montant-personnalise input {
     flex: 1;
     padding: 12px 15px;
     border: none;
@@ -89,23 +106,28 @@ h1 {
     text-align: center;
 }
 
-.btn-recharge-perso {
-    padding: 12px 20px;
-    border: none;
-    border-radius: 25px;
-    background: linear-gradient(45deg, #2196F3, #1976D2);
+.btn-recharger-perso {
+    background: linear-gradient(45deg, #4CAF50, #45a049);
     color: white;
-    font-weight: bold;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 25px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    font-weight: bold;
 }
 
-.btn-recharge-perso:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4);
+.btn-fermer {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    padding: 10px 20px;
+    border-radius: 25px;
+    cursor: pointer;
+    margin-top: 10px;
+    width: 100%;
 }
 
-/* RESTE DU CSS (identique à avant) */
+/* Styles existants conservés */
 .scanner-section {
     background: rgba(255, 255, 255, 0.1);
     padding: 25px;
