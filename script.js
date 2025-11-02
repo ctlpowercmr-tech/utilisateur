@@ -10,6 +10,9 @@ class UtilisateurApp {
     }
     
     async init() {
+        console.log('Application utilisateur initialisée');
+        console.log('URL API:', this.API_URL);
+        
         await this.chargerSolde();
         this.chargerHistorique();
         this.setupEventListeners();
@@ -22,7 +25,7 @@ class UtilisateurApp {
         document.getElementById('btn-annuler').addEventListener('click', () => this.annulerTransaction());
         document.getElementById('btn-nouvelle-transaction').addEventListener('click', () => this.nouvelleTransaction());
         
-        // NOUVEAUX ÉVÉNEMENTS RECHARGE
+        // ÉVÉNEMENTS RECHARGE
         document.getElementById('btn-recharger').addEventListener('click', () => this.afficherRecharge());
         document.getElementById('btn-fermer-recharge').addEventListener('click', () => this.cacherRecharge());
         
@@ -49,21 +52,22 @@ class UtilisateurApp {
         });
     }
     
-    // NOUVELLE MÉTHODE : Afficher la section recharge
+    // Afficher la section recharge
     afficherRecharge() {
         document.getElementById('recharge-section').style.display = 'block';
         document.getElementById('scanner-section').style.display = 'none';
         document.getElementById('transaction-section').style.display = 'none';
     }
     
-    // NOUVELLE MÉTHODE : Cacher la section recharge
+    // Cacher la section recharge
     cacherRecharge() {
         document.getElementById('recharge-section').style.display = 'none';
         document.getElementById('scanner-section').style.display = 'block';
     }
     
-    // NOUVELLE MÉTHODE : Recharger le solde
+    // Recharger le solde
     async rechargerSolde(montant) {
+        console.log('Tentative de rechargement:', montant);
         try {
             const response = await fetch(`${this.API_URL}/api/solde/utilisateur/recharger`, {
                 method: 'POST',
@@ -88,7 +92,7 @@ class UtilisateurApp {
             }
         } catch (error) {
             console.error('Erreur rechargement:', error);
-            alert('Erreur de connexion au serveur');
+            alert('Erreur de connexion au serveur. Vérifiez votre connexion internet.');
         }
     }
     
@@ -125,13 +129,14 @@ class UtilisateurApp {
                 
                 if (code) {
                     try {
+                        console.log('QR code détecté:', code.data);
                         const data = JSON.parse(code.data);
                         if (data.transactionId) {
                             this.arreterCamera();
                             this.chargerTransaction(data.transactionId);
                         }
                     } catch (e) {
-                        console.log('QR code non reconnu');
+                        console.log('QR code non reconnu:', e);
                     }
                 }
             }
@@ -158,10 +163,18 @@ class UtilisateurApp {
             alert('Veuillez saisir un ID de transaction');
             return;
         }
+
+        console.log('Chargement transaction:', id);
         
         try {
             const response = await fetch(`${this.API_URL}/api/transaction/${id}`);
+            
+            if (!response.ok) {
+                throw new Error(`Erreur HTTP: ${response.status}`);
+            }
+            
             const result = await response.json();
+            console.log('Résultat transaction:', result);
             
             if (result.success) {
                 this.transactionActuelle = result.data;
@@ -170,8 +183,8 @@ class UtilisateurApp {
                 alert('Transaction non trouvée ou expirée: ' + result.error);
             }
         } catch (error) {
-            console.error('Erreur:', error);
-            alert('Erreur de connexion au serveur. Vérifiez votre connexion internet.');
+            console.error('Erreur chargement transaction:', error);
+            alert('Erreur de connexion au serveur. Vérifiez:\n1. Votre connexion internet\n2. Que l\'ID de transaction est correct\n3. Que le serveur est accessible');
         }
     }
     
@@ -244,8 +257,8 @@ class UtilisateurApp {
                 alert('Erreur: ' + result.error);
             }
         } catch (error) {
-            console.error('Erreur:', error);
-            alert('Erreur de connexion au serveur');
+            console.error('Erreur paiement:', error);
+            alert('Erreur de connexion au serveur lors du paiement');
         }
     }
     
