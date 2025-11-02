@@ -5,18 +5,83 @@ class UtilisateurApp {
         this.historique = [];
         this.cameraActive = false;
         this.API_URL = CONFIG.API_URL;
+        this.estConnecte = false;
         
         this.init();
     }
     
     async init() {
-        console.log('Application utilisateur initialisée');
-        console.log('URL API:', this.API_URL);
+        console.log('🚀 Initialisation application utilisateur');
         
+        // Tester la connexion immédiatement
+        await this.testerConnexionServeur();
         await this.chargerSolde();
         this.chargerHistorique();
         this.setupEventListeners();
         this.demarrerScanner();
+        
+        // Vérifier la connexion périodiquement
+        setInterval(() => this.testerConnexionServeur(), 30000);
+    }
+    
+    async testerConnexionServeur() {
+        try {
+            console.log('🔗 Test de connexion au serveur...');
+            const debut = Date.now();
+            const response = await fetch(`${this.API_URL}/api/health`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            
+            const result = await response.json();
+            const tempsReponse = Date.now() - debut;
+            
+            if (result.status === 'OK') {
+                this.estConnecte = true;
+                console.log(`✅ Serveur connecté (${tempsReponse}ms)`);
+                this.mettreAJourStatutConnexion('connecte');
+                return true;
+            } else {
+                throw new Error('Réponse serveur invalide');
+            }
+        } catch (error) {
+            console.error('❌ Erreur connexion serveur:', error);
+            this.estConnecte = false;
+            this.mettreAJourStatutConnexion('erreur', error.message);
+            return false;
+        }
+    }
+    
+    mettreAJourStatutConnexion(statut, message = '') {
+        let statutElement = document.getElementById('statut-connexion');
+        
+        if (!statutElement) {
+            statutElement = document.createElement('div');
+            statutElement.id = 'statut-connexion';
+            statutElement.style.cssText = `
+                position: fixed;
+                top: 10px;
+                right: 10px;
+                padding: 10px 15px;
+                border-radius: 20px;
+                font-weight: bold;
+                z-index: 1000;
+                backdrop-filter: blur(10px);
+                font-size: 14px;
+            `;
+            document.body.appendChild(statutElement);
+        }
+        
+        if (statut === 'connecte') {
+            statutElement.textContent = '✅ En ligne';
+            statutElement.style.background = 'rgba(76, 175, 80, 0.9)';
+            statutElement.style.color = 'white';
+        } else {
+            statutElement.textContent = '❌ Hors ligne';
+            statutElement.style.background = 'rgba(244, 67, 54, 0.9)';
+            statutElement.style.color = 'white';
+        }
     }
     
     setupEventListeners() {
@@ -52,23 +117,26 @@ class UtilisateurApp {
         });
     }
     
-    // Afficher la section recharge
     afficherRecharge() {
         document.getElementById('recharge-section').style.display = 'block';
         document.getElementById('scanner-section').style.display = 'none';
         document.getElementById('transaction-section').style.display = 'none';
     }
     
-    // Cacher la section recharge
     cacherRecharge() {
         document.getElementById('recharge-section').style.display = 'none';
         document.getElementById('scanner-section').style.display = 'block';
     }
     
-    // Recharger le solde
     async rechargerSolde(montant) {
-        console.log('Tentative de rechargement:', montant);
+        if (!this.estConnecte) {
+            alert('❌ Impossible de se connecter au serveur pour recharger');
+            await this.testerConnexionServeur();
+            return;
+        }
+        
         try {
+            console.log('💳 Tentative de rechargement:', montant);
             const response = await fetch(`${this.API_URL}/api/solde/utilisateur/recharger`, {
                 method: 'POST',
                 headers: {
@@ -77,22 +145,26 @@ class UtilisateurApp {
                 body: JSON.stringify({ montant: parseFloat(montant) })
             });
             
+            if (!response.ok) {
+                throw new Error(`Erreur HTTP: ${response.status}`);
+            }
+            
             const result = await response.json();
             
             if (result.success) {
                 this.soldeUtilisateur = result.nouveauSolde;
                 this.mettreAJourSolde();
-                alert(result.message);
+                alert(`✅ ${result.message}`);
                 this.cacherRecharge();
-                
-                // Réinitialiser le champ personnalisé
                 document.getElementById('montant-personnalise').value = '';
             } else {
-                alert('Erreur: ' + result.error);
+                alert('❌ Erreur: ' + result.error);
             }
         } catch (error) {
             console.error('Erreur rechargement:', error);
-            alert('Erreur de connexion au serveur. Vérifiez votre connexion internet.');
+            this.estConnecte = false;
+            this.mettreAJourStatutConnexion('erreur', error.message);
+            alert('❌ Erreur de connexion au serveur lors du rechargement');
         }
     }
     
@@ -109,7 +181,7 @@ class UtilisateurApp {
         } catch (error) {
             console.error('Erreur accès caméra:', error);
             document.getElementById('scanner-section').innerHTML += 
-                '<p style="color: #ff6b6b; margin-top: 10px;">Impossible d\'accéder à la caméra</p>';
+                '<p style="color: #ff6b6b; margin-top: 10px;">📷 Impossible d\'accéder à la caméra</p>';
         }
     }
     
@@ -129,7 +201,7 @@ class UtilisateurApp {
                 
                 if (code) {
                     try {
-                        console.log('QR code détecté:', code.data);
+                        console.log('📱 QR code détecté:', code.data);
                         const data = JSON.parse(code.data);
                         if (data.transactionId) {
                             this.arreterCamera();
@@ -164,7 +236,13 @@ class UtilisateurApp {
             return;
         }
 
-        console.log('Chargement transaction:', id);
+        console.log('🔄 Chargement transaction:', id);
+        
+        if (!this.estConnecte) {
+            alert('❌ Impossible de se connecter au serveur');
+            await this.testerConnexionServeur();
+            return;
+        }
         
         try {
             const response = await fetch(`${this.API_URL}/api/transaction/${id}`);
@@ -174,17 +252,19 @@ class UtilisateurApp {
             }
             
             const result = await response.json();
-            console.log('Résultat transaction:', result);
+            console.log('📄 Résultat transaction:', result);
             
             if (result.success) {
                 this.transactionActuelle = result.data;
                 this.afficherDetailsTransaction();
             } else {
-                alert('Transaction non trouvée ou expirée: ' + result.error);
+                alert('❌ ' + (result.error || 'Transaction non trouvée'));
             }
         } catch (error) {
             console.error('Erreur chargement transaction:', error);
-            alert('Erreur de connexion au serveur. Vérifiez:\n1. Votre connexion internet\n2. Que l\'ID de transaction est correct\n3. Que le serveur est accessible');
+            this.estConnecte = false;
+            this.mettreAJourStatutConnexion('erreur', error.message);
+            alert('❌ Erreur de connexion au serveur. Vérifiez:\n• Votre connexion internet\n• Que l\'ID de transaction est correct');
         }
     }
     
@@ -204,10 +284,14 @@ class UtilisateurApp {
         this.afficherBoissonsTransaction();
         
         const btnPayer = document.getElementById('btn-payer');
-        btnPayer.disabled = this.transactionActuelle.statut !== 'en_attente';
+        const estPayable = this.transactionActuelle.statut === 'en_attente' && this.estConnecte;
+        
+        btnPayer.disabled = !estPayable;
         
         if (this.transactionActuelle.statut !== 'en_attente') {
             btnPayer.textContent = 'Transaction ' + this.getStatutText(this.transactionActuelle.statut);
+        } else if (!this.estConnecte) {
+            btnPayer.textContent = 'Serveur hors ligne';
         } else {
             btnPayer.textContent = 'Confirmer le Paiement';
         }
@@ -239,12 +323,21 @@ class UtilisateurApp {
     }
     
     async effectuerPaiement() {
-        if (!this.transactionActuelle) return;
+        if (!this.transactionActuelle || !this.estConnecte) {
+            alert('❌ Impossible de se connecter au serveur');
+            await this.testerConnexionServeur();
+            return;
+        }
         
         try {
+            console.log('💸 Tentative de paiement:', this.transactionActuelle.id);
             const response = await fetch(`${this.API_URL}/api/transaction/${this.transactionActuelle.id}/payer`, {
                 method: 'POST'
             });
+            
+            if (!response.ok) {
+                throw new Error(`Erreur HTTP: ${response.status}`);
+            }
             
             const result = await response.json();
             
@@ -253,12 +346,15 @@ class UtilisateurApp {
                 this.mettreAJourSolde();
                 this.ajouterAHistorique(this.transactionActuelle);
                 this.afficherConfirmationPaiement();
+                console.log('✅ Paiement réussi');
             } else {
-                alert('Erreur: ' + result.error);
+                alert('❌ Erreur: ' + result.error);
             }
         } catch (error) {
             console.error('Erreur paiement:', error);
-            alert('Erreur de connexion au serveur lors du paiement');
+            this.estConnecte = false;
+            this.mettreAJourStatutConnexion('erreur', error.message);
+            alert('❌ Erreur de connexion au serveur lors du paiement');
         }
     }
     
@@ -293,6 +389,11 @@ class UtilisateurApp {
     async chargerSolde() {
         try {
             const response = await fetch(`${this.API_URL}/api/solde/utilisateur`);
+            
+            if (!response.ok) {
+                throw new Error(`Erreur HTTP: ${response.status}`);
+            }
+            
             const result = await response.json();
             
             if (result.success) {
@@ -301,6 +402,8 @@ class UtilisateurApp {
             }
         } catch (error) {
             console.error('Erreur chargement solde:', error);
+            this.estConnecte = false;
+            this.mettreAJourStatutConnexion('erreur', error.message);
         }
     }
     
@@ -343,10 +446,12 @@ class UtilisateurApp {
     }
     
     async chargerHistorique() {
-        // Dans une vraie application, charger depuis l'API
         this.historique = [];
         this.mettreAJourHistorique();
     }
 }
 
-const utilisateurApp = new UtilisateurApp();
+// Initialiser immédiatement au chargement
+document.addEventListener('DOMContentLoaded', function() {
+    window.utilisateurApp = new UtilisateurApp();
+});
