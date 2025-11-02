@@ -21,16 +21,57 @@ class UtilisateurApp {
         document.getElementById('btn-payer').addEventListener('click', () => this.effectuerPaiement());
         document.getElementById('btn-annuler').addEventListener('click', () => this.annulerTransaction());
         document.getElementById('btn-nouvelle-transaction').addEventListener('click', () => this.nouvelleTransaction());
-        document.getElementById('btn-copier-id').addEventListener('click', () => this.copierIdTransaction());
+        document.getElementById('btn-recharge-perso').addEventListener('click', () => this.rechargerSoldePerso());
+        
+        // Boutons de recharge rapide
+        document.querySelectorAll('.btn-recharge').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const montant = parseFloat(e.target.dataset.montant);
+                this.rechargerSolde(montant);
+            });
+        });
         
         document.getElementById('transaction-id').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') this.chargerTransaction();
         });
+    }
+    
+    async rechargerSolde(montant) {
+        try {
+            const response = await fetch(`${this.API_URL}/api/solde/recharger`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ montant })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                this.soldeUtilisateur = result.nouveauSolde;
+                this.mettreAJourSolde();
+                alert(`✅ Rechargement réussi! ${result.message}`);
+            } else {
+                alert('❌ Erreur: ' + result.error);
+            }
+        } catch (error) {
+            console.error('Erreur rechargement:', error);
+            alert('❌ Erreur de connexion lors du rechargement');
+        }
+    }
+    
+    rechargerSoldePerso() {
+        const input = document.getElementById('montant-personnalise');
+        const montant = parseFloat(input.value);
         
-        // Forcer les majuscules dans l'input
-        document.getElementById('transaction-id').addEventListener('input', (e) => {
-            e.target.value = e.target.value.toUpperCase();
-        });
+        if (isNaN(montant) || montant <= 0) {
+            alert('Veuillez entrer un montant valide');
+            return;
+        }
+        
+        this.rechargerSolde(montant);
+        input.value = '';
     }
     
     async demarrerScanner() {
@@ -93,10 +134,16 @@ class UtilisateurApp {
     }
     
     async chargerTransaction(transactionId = null) {
-        const id = transactionId || document.getElementById('transaction-id').value.trim();
+        const id = transactionId || document.getElementById('transaction-id').value.trim().toUpperCase();
         
         if (!id) {
             alert('Veuillez saisir un ID de transaction');
+            return;
+        }
+        
+        // Vérifier le format (8 caractères alphanumériques)
+        if (!/^[A-Z0-9]{8}$/.test(id)) {
+            alert('ID de transaction invalide. Format attendu: 8 caractères (ex: A1B2C3D4)');
             return;
         }
         
@@ -112,7 +159,7 @@ class UtilisateurApp {
             }
         } catch (error) {
             console.error('Erreur:', error);
-            alert('Erreur de connexion au serveur');
+            alert('Erreur de connexion au serveur. Vérifiez votre connexion internet.');
         }
     }
     
@@ -152,22 +199,6 @@ class UtilisateurApp {
             `;
             listeElement.appendChild(item);
         });
-    }
-    
-    async copierIdTransaction() {
-        if (this.transactionActuelle && this.transactionActuelle.id) {
-            try {
-                await navigator.clipboard.writeText(this.transactionActuelle.id);
-                const btn = document.getElementById('btn-copier-id');
-                const originalText = btn.innerHTML;
-                btn.innerHTML = '✅';
-                setTimeout(() => {
-                    btn.innerHTML = originalText;
-                }, 2000);
-            } catch (err) {
-                console.error('Erreur copie:', err);
-            }
-        }
     }
     
     getStatutText(statut) {
@@ -283,6 +314,7 @@ class UtilisateurApp {
     }
     
     async chargerHistorique() {
+        // Dans une vraie application, charger depuis l'API
         this.historique = [];
         this.mettreAJourHistorique();
     }
