@@ -21,14 +21,27 @@ class UtilisateurApp {
         document.getElementById('btn-payer').addEventListener('click', () => this.effectuerPaiement());
         document.getElementById('btn-annuler').addEventListener('click', () => this.annulerTransaction());
         document.getElementById('btn-nouvelle-transaction').addEventListener('click', () => this.nouvelleTransaction());
-        document.getElementById('btn-recharge-perso').addEventListener('click', () => this.rechargerSoldePerso());
         
-        // Boutons de recharge rapide
-        document.querySelectorAll('.btn-recharge').forEach(btn => {
+        // NOUVEAUX ÉVÉNEMENTS RECHARGE
+        document.getElementById('btn-recharger').addEventListener('click', () => this.afficherRecharge());
+        document.getElementById('btn-fermer-recharge').addEventListener('click', () => this.cacherRecharge());
+        
+        // Recharges rapides
+        document.querySelectorAll('.montant-rapide').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                const montant = parseFloat(e.target.dataset.montant);
+                const montant = e.target.getAttribute('data-montant');
                 this.rechargerSolde(montant);
             });
+        });
+        
+        // Recharge personnalisée
+        document.getElementById('btn-recharger-perso').addEventListener('click', () => {
+            const montant = document.getElementById('montant-personnalise').value;
+            if (montant && montant > 0) {
+                this.rechargerSolde(montant);
+            } else {
+                alert('Veuillez entrer un montant valide');
+            }
         });
         
         document.getElementById('transaction-id').addEventListener('keypress', (e) => {
@@ -36,14 +49,28 @@ class UtilisateurApp {
         });
     }
     
+    // NOUVELLE MÉTHODE : Afficher la section recharge
+    afficherRecharge() {
+        document.getElementById('recharge-section').style.display = 'block';
+        document.getElementById('scanner-section').style.display = 'none';
+        document.getElementById('transaction-section').style.display = 'none';
+    }
+    
+    // NOUVELLE MÉTHODE : Cacher la section recharge
+    cacherRecharge() {
+        document.getElementById('recharge-section').style.display = 'none';
+        document.getElementById('scanner-section').style.display = 'block';
+    }
+    
+    // NOUVELLE MÉTHODE : Recharger le solde
     async rechargerSolde(montant) {
         try {
-            const response = await fetch(`${this.API_URL}/api/solde/recharger`, {
+            const response = await fetch(`${this.API_URL}/api/solde/utilisateur/recharger`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ montant })
+                body: JSON.stringify({ montant: parseFloat(montant) })
             });
             
             const result = await response.json();
@@ -51,27 +78,18 @@ class UtilisateurApp {
             if (result.success) {
                 this.soldeUtilisateur = result.nouveauSolde;
                 this.mettreAJourSolde();
-                alert(`✅ Rechargement réussi! ${result.message}`);
+                alert(result.message);
+                this.cacherRecharge();
+                
+                // Réinitialiser le champ personnalisé
+                document.getElementById('montant-personnalise').value = '';
             } else {
-                alert('❌ Erreur: ' + result.error);
+                alert('Erreur: ' + result.error);
             }
         } catch (error) {
             console.error('Erreur rechargement:', error);
-            alert('❌ Erreur de connexion lors du rechargement');
+            alert('Erreur de connexion au serveur');
         }
-    }
-    
-    rechargerSoldePerso() {
-        const input = document.getElementById('montant-personnalise');
-        const montant = parseFloat(input.value);
-        
-        if (isNaN(montant) || montant <= 0) {
-            alert('Veuillez entrer un montant valide');
-            return;
-        }
-        
-        this.rechargerSolde(montant);
-        input.value = '';
     }
     
     async demarrerScanner() {
@@ -134,16 +152,10 @@ class UtilisateurApp {
     }
     
     async chargerTransaction(transactionId = null) {
-        const id = transactionId || document.getElementById('transaction-id').value.trim().toUpperCase();
+        const id = transactionId || document.getElementById('transaction-id').value.trim();
         
         if (!id) {
             alert('Veuillez saisir un ID de transaction');
-            return;
-        }
-        
-        // Vérifier le format (8 caractères alphanumériques)
-        if (!/^[A-Z0-9]{8}$/.test(id)) {
-            alert('ID de transaction invalide. Format attendu: 8 caractères (ex: A1B2C3D4)');
             return;
         }
         
@@ -155,7 +167,7 @@ class UtilisateurApp {
                 this.transactionActuelle = result.data;
                 this.afficherDetailsTransaction();
             } else {
-                alert('Transaction non trouvée ou expirée');
+                alert('Transaction non trouvée ou expirée: ' + result.error);
             }
         } catch (error) {
             console.error('Erreur:', error);
@@ -166,9 +178,11 @@ class UtilisateurApp {
     afficherDetailsTransaction() {
         const scannerSection = document.getElementById('scanner-section');
         const transactionSection = document.getElementById('transaction-section');
+        const rechargeSection = document.getElementById('recharge-section');
         
         scannerSection.style.display = 'none';
         transactionSection.style.display = 'block';
+        rechargeSection.style.display = 'none';
         
         document.getElementById('detail-transaction-id').textContent = this.transactionActuelle.id;
         document.getElementById('detail-montant').textContent = this.transactionActuelle.montant.toFixed(2);
@@ -251,9 +265,11 @@ class UtilisateurApp {
     retournerAuScanner() {
         const scannerSection = document.getElementById('scanner-section');
         const transactionSection = document.getElementById('transaction-section');
+        const rechargeSection = document.getElementById('recharge-section');
         
         scannerSection.style.display = 'block';
         transactionSection.style.display = 'none';
+        rechargeSection.style.display = 'none';
         
         document.getElementById('transaction-id').value = '';
         this.transactionActuelle = null;
