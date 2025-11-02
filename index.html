@@ -26,9 +26,10 @@
                     </div>
                     <p>ou saisir manuellement l'ID de transaction:</p>
                     <div class="input-group">
-                        <input type="text" id="transaction-id" placeholder="ID de transaction">
+                        <input type="text" id="transaction-id" placeholder="Ex: A1B2C3" maxlength="6" style="text-transform: uppercase;">
                         <button id="btn-charger-transaction" class="btn-charger">Charger</button>
                     </div>
+                    <p class="info-court">ID court (6 caractères)</p>
                 </div>
             </section>
 
@@ -36,7 +37,9 @@
                 <h2>DÉTAILS DE LA TRANSACTION</h2>
                 <div class="transaction-details">
                     <div class="transaction-info">
-                        <p>ID: <span id="detail-transaction-id">-</span></p>
+                        <p>ID: <span id="detail-transaction-id">-</span>
+                           <button id="btn-copier-id" class="btn-copier">📋</button>
+                        </p>
                         <p>Montant: <span id="detail-montant">0.00</span>€</p>
                         <p>Statut: <span id="detail-statut">-</span></p>
                     </div>
