@@ -21,9 +21,15 @@ class UtilisateurApp {
         document.getElementById('btn-payer').addEventListener('click', () => this.effectuerPaiement());
         document.getElementById('btn-annuler').addEventListener('click', () => this.annulerTransaction());
         document.getElementById('btn-nouvelle-transaction').addEventListener('click', () => this.nouvelleTransaction());
+        document.getElementById('btn-copier-id').addEventListener('click', () => this.copierIdTransaction());
         
         document.getElementById('transaction-id').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') this.chargerTransaction();
+        });
+        
+        // Forcer les majuscules dans l'input
+        document.getElementById('transaction-id').addEventListener('input', (e) => {
+            e.target.value = e.target.value.toUpperCase();
         });
     }
     
@@ -148,6 +154,22 @@ class UtilisateurApp {
         });
     }
     
+    async copierIdTransaction() {
+        if (this.transactionActuelle && this.transactionActuelle.id) {
+            try {
+                await navigator.clipboard.writeText(this.transactionActuelle.id);
+                const btn = document.getElementById('btn-copier-id');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '✅';
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                }, 2000);
+            } catch (err) {
+                console.error('Erreur copie:', err);
+            }
+        }
+    }
+    
     getStatutText(statut) {
         const statuts = {
             'en_attente': 'En attente',
@@ -261,7 +283,6 @@ class UtilisateurApp {
     }
     
     async chargerHistorique() {
-        // Dans une vraie application, charger depuis l'API
         this.historique = [];
         this.mettreAJourHistorique();
     }
