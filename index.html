@@ -13,23 +13,25 @@
             <h1>MON COMPTE CTL</h1>
             <div class="solde-utilisateur">
                 Solde: <span id="solde-utilisateur">0.00</span>€
+                <button id="btn-recharger" class="btn-recharger">+</button>
             </div>
         </header>
 
         <main>
             <!-- NOUVELLE SECTION RECHARGE -->
-            <section class="recharge-section">
-                <h2>RECHARGER MON SOLDE</h2>
+            <section class="recharge-section" id="recharge-section">
+                <h2>RECHARGER VOTRE SOLDE</h2>
                 <div class="recharge-options">
-                    <button class="btn-recharge" data-montant="5">+5€</button>
-                    <button class="btn-recharge" data-montant="10">+10€</button>
-                    <button class="btn-recharge" data-montant="20">+20€</button>
-                    <button class="btn-recharge" data-montant="50">+50€</button>
+                    <div class="montant-rapide" data-montant="5">5€</div>
+                    <div class="montant-rapide" data-montant="10">10€</div>
+                    <div class="montant-rapide" data-montant="20">20€</div>
+                    <div class="montant-rapide" data-montant="50">50€</div>
                 </div>
-                <div class="recharge-personnalisee">
+                <div class="montant-personnalise">
                     <input type="number" id="montant-personnalise" placeholder="Montant personnalisé" min="1" step="0.5">
-                    <button id="btn-recharge-perso" class="btn-recharge-perso">Recharger</button>
+                    <button id="btn-recharger-perso" class="btn-recharger-perso">Recharger</button>
                 </div>
+                <button id="btn-fermer-recharge" class="btn-fermer">Fermer</button>
             </section>
 
             <section class="scanner-section" id="scanner-section">
@@ -41,7 +43,7 @@
                     </div>
                     <p>ou saisir manuellement l'ID de transaction:</p>
                     <div class="input-group">
-                        <input type="text" id="transaction-id" placeholder="ID de transaction (ex: A1B2C3D4)" maxlength="8">
+                        <input type="text" id="transaction-id" placeholder="Ex: TXA1B2C3D">
                         <button id="btn-charger-transaction" class="btn-charger">Charger</button>
                     </div>
                 </div>
