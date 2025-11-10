@@ -966,4 +966,75 @@ body {
 }
 
 .notification.info {
-    background:
+    background: rgba(33, 150, 243, 0.9);
+}
+
+/* Statut Connexion */
+.statut-connexion {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 0.8rem 1.2rem;
+    border-radius: 20px;
+    font-weight: 600;
+    z-index: 100;
+    font-size: 0.8rem;
+    backdrop-filter: blur(20px);
+    display: none;
+}
+
+.statut-connexion.connecte {
+    background: rgba(76, 175, 80, 0.9);
+    color: white;
+    display: block;
+}
+
+.statut-connexion.erreur {
+    background: rgba(244, 67, 54, 0.9);
+    color: white;
+    display: block;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    .app-container {
+        max-width: 100%;
+    }
+    
+    .operateurs-grid,
+    .montants-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .scanner-frame {
+        width: 250px;
+        height: 250px;
+    }
+    
+    .transaction-card {
+        padding: 1.5rem;
+    }
+    
+    .confirmation-modal {
+        padding: 2rem 1.5rem;
+    }
+}
+
+/* Scrollbar personnalisée */
+.historique-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.historique-list::-webkit-scrollbar-track {
+    background: var(--gray-light);
+    border-radius: 3px;
+}
+
+.historique-list::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: 3px;
+}
+
+.historique-list::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-dark);
+}
