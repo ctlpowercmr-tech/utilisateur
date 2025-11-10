@@ -1,20 +1,8 @@
-// Configuration de l'API
 const CONFIG = {
-  API_URL: 'htttps://server-jal5.onrender.com'
+  API_URL: 'https://votre-api.render.com'
 };
 
-// Configuration des opérateurs
-const OPERATEURS = {
-  orange: {
-    nom: "Orange Money",
-    frais: 0.01, // 1%
-    logo: "🎯",
-    couleur: "#FF6600"
-  },
-  mtn: {
-    nom: "MTN Mobile Money", 
-    frais: 0.015, // 1.5%
-    logo: "🔷",
-    couleur: "#FFCC00"
-  }
-};
+const OPERATEURS = [
+  { id: 'orange', nom: 'Orange Money', icone: '🟠', couleur: '#FF6600' },
+  { id: 'mtn', nom: 'MTN Mobile Money', icone: '🟡', couleur: '#FFCC00' }
+];
