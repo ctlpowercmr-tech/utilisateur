@@ -50,6 +50,8 @@ class CTLPayApp {
     
     mettreAJourStatutConnexion(statut, message = '') {
         const statutElement = document.getElementById('statut-connexion');
+        if (!statutElement) return;
+        
         statutElement.className = `statut-connexion ${statut}`;
         
         if (statut === 'connecte') {
@@ -66,31 +68,67 @@ class CTLPayApp {
         navButtons.forEach(btn => {
             btn.addEventListener('click', () => {
                 const targetSection = btn.getAttribute('data-section');
-                
-                // Mettre à jour la navigation
-                navButtons.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                
-                // Afficher la section correspondante
-                sections.forEach(section => section.classList.remove('active'));
-                document.getElementById(`${targetSection}-section`).classList.add('active');
-                
-                // Actions spécifiques
-                if (targetSection === 'scanner') {
-                    this.demarrerScanner();
-                }
+                this.changerSection(targetSection);
             });
         });
     }
     
+    changerSection(section) {
+        console.log('Changement de section vers:', section);
+        
+        // Mettre à jour la navigation
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        const navBtn = document.querySelector(`[data-section="${section}"]`);
+        if (navBtn) {
+            navBtn.classList.add('active');
+        }
+        
+        // Cacher toutes les sections
+        document.querySelectorAll('.app-section').forEach(sec => {
+            sec.classList.remove('active');
+        });
+        
+        // Afficher la section cible
+        const targetSection = document.getElementById(`${section}-section`);
+        if (targetSection) {
+            targetSection.classList.add('active');
+        } else {
+            console.error('Section non trouvée:', `${section}-section`);
+        }
+        
+        // Actions spécifiques
+        if (section === 'scanner') {
+            this.demarrerScanner();
+        }
+    }
+    
     setupEventListeners() {
         // Scanner
-        document.getElementById('btn-activer-camera').addEventListener('click', () => this.demarrerScanner());
-        document.getElementById('btn-desactiver-camera').addEventListener('click', () => this.arreterCamera());
-        document.getElementById('btn-charger-transaction').addEventListener('click', () => this.chargerTransaction());
-        document.getElementById('transaction-id').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') this.chargerTransaction();
-        });
+        const btnActiverCamera = document.getElementById('btn-activer-camera');
+        const btnDesactiverCamera = document.getElementById('btn-desactiver-camera');
+        const btnChargerTransaction = document.getElementById('btn-charger-transaction');
+        const inputTransactionId = document.getElementById('transaction-id');
+        
+        if (btnActiverCamera) {
+            btnActiverCamera.addEventListener('click', () => this.demarrerScanner());
+        }
+        
+        if (btnDesactiverCamera) {
+            btnDesactiverCamera.addEventListener('click', () => this.arreterCamera());
+        }
+        
+        if (btnChargerTransaction) {
+            btnChargerTransaction.addEventListener('click', () => this.chargerTransaction());
+        }
+        
+        if (inputTransactionId) {
+            inputTransactionId.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') this.chargerTransaction();
+            });
+        }
         
         // Recharge
         document.querySelectorAll('.operateur-card').forEach(card => {
@@ -104,32 +142,42 @@ class CTLPayApp {
             });
         });
         
-        document.getElementById('btn-recharger-perso').addEventListener('click', () => {
-            const montant = document.getElementById('montant-personnalise').value;
-            if (montant && montant > 0) {
-                this.rechargerSolde(montant);
-            } else {
-                this.afficherNotification('Veuillez entrer un montant valide', 'warning');
-            }
-        });
+        const btnRechargerPerso = document.getElementById('btn-recharger-perso');
+        if (btnRechargerPerso) {
+            btnRechargerPerso.addEventListener('click', () => {
+                const montant = document.getElementById('montant-personnalise').value;
+                if (montant && montant > 0) {
+                    this.rechargerSolde(montant);
+                } else {
+                    this.afficherNotification('Veuillez entrer un montant valide', 'warning');
+                }
+            });
+        }
         
         // Transaction
-        document.getElementById('btn-payer').addEventListener('click', () => this.effectuerPaiement());
-        document.getElementById('btn-annuler').addEventListener('click', () => this.annulerTransaction());
-        document.getElementById('btn-nouvelle-transaction').addEventListener('click', () => this.nouvelleTransaction());
+        const btnPayer = document.getElementById('btn-payer');
+        const btnAnnuler = document.getElementById('btn-annuler');
+        const btnNouvelleTransaction = document.getElementById('btn-nouvelle-transaction');
+        
+        if (btnPayer) {
+            btnPayer.addEventListener('click', () => this.effectuerPaiement());
+        }
+        
+        if (btnAnnuler) {
+            btnAnnuler.addEventListener('click', () => this.annulerTransaction());
+        }
+        
+        if (btnNouvelleTransaction) {
+            btnNouvelleTransaction.addEventListener('click', () => this.nouvelleTransaction());
+        }
         
         // Recharge header
-        document.getElementById('btn-recharger').addEventListener('click', () => {
-            this.changerSection('recharge');
-        });
-    }
-    
-    changerSection(section) {
-        document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-        document.querySelectorAll('.app-section').forEach(sec => sec.classList.remove('active'));
-        
-        document.querySelector(`[data-section="${section}"]`).classList.add('active');
-        document.getElementById(`${section}-section`).classList.add('active');
+        const btnRechargerHeader = document.getElementById('btn-recharger');
+        if (btnRechargerHeader) {
+            btnRechargerHeader.addEventListener('click', () => {
+                this.changerSection('recharge');
+            });
+        }
     }
     
     selectionnerOperateur(card) {
@@ -156,11 +204,18 @@ class CTLPayApp {
             });
             
             const video = document.getElementById('camera-feed');
+            if (!video) {
+                throw new Error('Élément video non trouvé');
+            }
+            
             video.srcObject = stream;
             this.cameraActive = true;
             
-            document.getElementById('btn-activer-camera').style.display = 'none';
-            document.getElementById('btn-desactiver-camera').style.display = 'inline-block';
+            const btnActiver = document.getElementById('btn-activer-camera');
+            const btnDesactiver = document.getElementById('btn-desactiver-camera');
+            
+            if (btnActiver) btnActiver.style.display = 'none';
+            if (btnDesactiver) btnDesactiver.style.display = 'inline-block';
             
             this.scannerQRCode(stream);
             
@@ -174,17 +229,21 @@ class CTLPayApp {
     arreterCamera() {
         if (this.cameraActive) {
             const video = document.getElementById('camera-feed');
-            const stream = video.srcObject;
-            
-            if (stream) {
-                stream.getTracks().forEach(track => track.stop());
+            if (video) {
+                const stream = video.srcObject;
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                }
+                video.srcObject = null;
             }
             
             this.cameraActive = false;
-            video.srcObject = null;
             
-            document.getElementById('btn-activer-camera').style.display = 'inline-block';
-            document.getElementById('btn-desactiver-camera').style.display = 'none';
+            const btnActiver = document.getElementById('btn-activer-camera');
+            const btnDesactiver = document.getElementById('btn-desactiver-camera');
+            
+            if (btnActiver) btnActiver.style.display = 'inline-block';
+            if (btnDesactiver) btnDesactiver.style.display = 'none';
             
             this.afficherNotification('Caméra désactivée', 'info');
         }
@@ -192,6 +251,8 @@ class CTLPayApp {
     
     scannerQRCode(stream) {
         const video = document.getElementById('camera-feed');
+        if (!video) return;
+        
         const canvas = document.createElement('canvas');
         const context = canvas.getContext('2d');
         let scanEnCours = false;
@@ -213,9 +274,13 @@ class CTLPayApp {
                     
                     try {
                         const data = JSON.parse(code.data);
+                        console.log('QR Code scanné:', data);
+                        
                         if (data.transactionId) {
                             this.arreterCamera();
                             this.chargerTransaction(data.transactionId);
+                        } else {
+                            scanEnCours = false;
                         }
                     } catch (e) {
                         console.log('QR code non reconnu:', e);
@@ -229,15 +294,19 @@ class CTLPayApp {
     }
     
     jouerSonScan() {
-        const audio = document.getElementById('scan-sound');
-        if (audio) {
-            audio.currentTime = 0;
-            audio.play().catch(e => console.log('Son de scan non joué:', e));
+        try {
+            const audio = document.getElementById('scan-sound');
+            if (audio) {
+                audio.currentTime = 0;
+                audio.play().catch(e => console.log('Son de scan non joué:', e));
+            }
+        } catch (error) {
+            console.log('Erreur lecture son:', error);
         }
     }
     
     async chargerTransaction(transactionId = null) {
-        const id = transactionId || document.getElementById('transaction-id').value.trim().toUpperCase();
+        const id = transactionId || document.getElementById('transaction-id')?.value.trim().toUpperCase();
         
         if (!id) {
             this.afficherNotification('Veuillez saisir un ID de transaction', 'warning');
@@ -283,25 +352,45 @@ class CTLPayApp {
     afficherDetailsTransaction() {
         if (!this.transactionActuelle) return;
         
-        document.getElementById('detail-transaction-id').textContent = this.transactionActuelle.id;
-        document.getElementById('detail-montant').textContent = this.transactionActuelle.montant.toLocaleString();
-        document.getElementById('detail-statut').textContent = this.getStatutText(this.transactionActuelle.statut);
-        document.getElementById('detail-statut').className = `transaction-statut ${this.transactionActuelle.statut}`;
+        // Mettre à jour les éléments de la transaction
+        const elements = {
+            'detail-transaction-id': this.transactionActuelle.id,
+            'detail-montant': this.transactionActuelle.montant.toLocaleString(),
+            'detail-statut': this.getStatutText(this.transactionActuelle.statut)
+        };
+        
+        Object.entries(elements).forEach(([id, value]) => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.textContent = value;
+            }
+        });
+        
+        // Mettre à jour le statut
+        const statutElement = document.getElementById('detail-statut');
+        if (statutElement) {
+            statutElement.className = `transaction-statut ${this.transactionActuelle.statut}`;
+        }
         
         this.afficherBoissonsTransaction();
         
         const btnPayer = document.getElementById('btn-payer');
-        const estPayable = this.transactionActuelle.statut === 'en_attente' && this.estConnecte;
-        
-        btnPayer.disabled = !estPayable;
-        
-        if (!estPayable) {
-            btnPayer.textContent = 'Transaction ' + this.getStatutText(this.transactionActuelle.statut);
+        if (btnPayer) {
+            const estPayable = this.transactionActuelle.statut === 'en_attente' && this.estConnecte;
+            btnPayer.disabled = !estPayable;
+            
+            if (!estPayable) {
+                btnPayer.textContent = 'Transaction ' + this.getStatutText(this.transactionActuelle.statut);
+            } else {
+                btnPayer.textContent = '💳 Confirmer le Paiement';
+            }
         }
     }
     
     afficherBoissonsTransaction() {
         const listeElement = document.getElementById('liste-boissons');
+        if (!listeElement) return;
+        
         listeElement.innerHTML = '';
         
         if (this.transactionActuelle.boissons && Array.isArray(this.transactionActuelle.boissons)) {
@@ -368,11 +457,18 @@ class CTLPayApp {
     }
     
     afficherConfirmationPaiement(transaction) {
-        document.getElementById('confirmation-id').textContent = transaction.id;
-        document.getElementById('confirmation-montant').textContent = transaction.montant.toLocaleString();
-        document.getElementById('confirmation-solde').textContent = this.soldeUtilisateur.toLocaleString();
+        const confirmationOverlay = document.getElementById('confirmation-paiement');
+        const confirmationId = document.getElementById('confirmation-id');
+        const confirmationMontant = document.getElementById('confirmation-montant');
+        const confirmationSolde = document.getElementById('confirmation-solde');
         
-        document.getElementById('confirmation-paiement').style.display = 'flex';
+        if (confirmationId) confirmationId.textContent = transaction.id;
+        if (confirmationMontant) confirmationMontant.textContent = transaction.montant.toLocaleString();
+        if (confirmationSolde) confirmationSolde.textContent = this.soldeUtilisateur.toLocaleString();
+        
+        if (confirmationOverlay) {
+            confirmationOverlay.style.display = 'flex';
+        }
     }
     
     async rechargerSolde(montant) {
@@ -417,7 +513,8 @@ class CTLPayApp {
                 this.mettreAJourSolde();
                 
                 // Réinitialiser le formulaire
-                document.getElementById('montant-personnalise').value = '';
+                const inputMontant = document.getElementById('montant-personnalise');
+                if (inputMontant) inputMontant.value = '';
                 
                 this.afficherNotification(result.message, 'success');
                 
@@ -441,7 +538,11 @@ class CTLPayApp {
     }
     
     nouvelleTransaction() {
-        document.getElementById('confirmation-paiement').style.display = 'none';
+        const confirmationOverlay = document.getElementById('confirmation-paiement');
+        if (confirmationOverlay) {
+            confirmationOverlay.style.display = 'none';
+        }
+        
         this.changerSection('scanner');
         this.transactionActuelle = null;
         this.demarrerScanner();
@@ -467,7 +568,10 @@ class CTLPayApp {
     }
     
     mettreAJourSolde() {
-        document.getElementById('solde-utilisateur').textContent = this.soldeUtilisateur.toLocaleString();
+        const soldeElement = document.getElementById('solde-utilisateur');
+        if (soldeElement) {
+            soldeElement.textContent = this.soldeUtilisateur.toLocaleString();
+        }
     }
     
     ajouterAHistorique(transaction) {
@@ -490,6 +594,8 @@ class CTLPayApp {
     mettreAJourHistorique() {
         const historiqueElement = document.getElementById('historique-transactions');
         const historiqueVide = document.getElementById('historique-vide');
+        
+        if (!historiqueElement || !historiqueVide) return;
         
         if (this.historique.length === 0) {
             historiqueElement.style.display = 'none';
@@ -526,6 +632,8 @@ class CTLPayApp {
     
     afficherNotification(message, type = 'info') {
         const notification = document.getElementById('notification');
+        if (!notification) return;
+        
         notification.textContent = message;
         notification.className = `notification ${type}`;
         notification.style.display = 'block';
