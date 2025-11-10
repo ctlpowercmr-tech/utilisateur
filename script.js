@@ -1,9 +1,11 @@
-class UtilisateurApp {
+class CTLPayApp {
     constructor() {
         this.soldeUtilisateur = 0;
         this.transactionActuelle = null;
         this.historique = [];
         this.cameraActive = false;
+        this.operateurSelectionne = null;
+        this.montantSelectionne = 0;
         this.API_URL = CONFIG.API_URL;
         this.estConnecte = false;
         
@@ -11,181 +13,289 @@ class UtilisateurApp {
     }
     
     async init() {
-        console.log('🚀 Initialisation application utilisateur');
+        console.log('🚀 CTL-PAY Application initialisée');
         
-        // Tester la connexion immédiatement
         await this.testerConnexionServeur();
         await this.chargerSolde();
         this.chargerHistorique();
         this.setupEventListeners();
+        this.setupNavigation();
         this.demarrerScanner();
         
-        // Vérifier la connexion périodiquement
+        // Maintenance de la connexion
         setInterval(() => this.testerConnexionServeur(), 30000);
     }
     
-    async testerConnexionServeur() {
-        try {
-            console.log('🔗 Test de connexion au serveur...');
-            const debut = Date.now();
-            const response = await fetch(`${this.API_URL}/api/health`);
-            
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
-            }
-            
-            const result = await response.json();
-            const tempsReponse = Date.now() - debut;
-            
-            if (result.status === 'OK') {
-                this.estConnecte = true;
-                console.log(`✅ Serveur connecté (${tempsReponse}ms)`);
-                this.mettreAJourStatutConnexion('connecte');
-                return true;
-            } else {
-                throw new Error('Réponse serveur invalide');
-            }
-        } catch (error) {
-            console.error('❌ Erreur connexion serveur:', error);
-            this.estConnecte = false;
-            this.mettreAJourStatutConnexion('erreur', error.message);
-            return false;
-        }
+    setupNavigation() {
+        // Navigation rapide
+        document.querySelectorAll('.quick-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const section = e.currentTarget.getAttribute('data-section');
+                this.changerSection(section);
+            });
+        });
+        
+        // Bouton retour transaction
+        document.getElementById('btn-back-transaction').addEventListener('click', () => {
+            this.changerSection('scanner');
+        });
+        
+        // Bouton modal OK
+        document.getElementById('btn-modal-ok').addEventListener('click', () => {
+            this.cacherModal();
+            this.changerSection('scanner');
+        });
     }
     
-    mettreAJourStatutConnexion(statut, message = '') {
-        let statutElement = document.getElementById('statut-connexion');
+    changerSection(section) {
+        // Mettre à jour la navigation
+        document.querySelectorAll('.quick-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.querySelector(`[data-section="${section}"]`).classList.add('active');
         
-        if (!statutElement) {
-            statutElement = document.createElement('div');
-            statutElement.id = 'statut-connexion';
-            statutElement.style.cssText = `
-                position: fixed;
-                top: 10px;
-                right: 10px;
-                padding: 10px 15px;
-                border-radius: 20px;
-                font-weight: bold;
-                z-index: 1000;
-                backdrop-filter: blur(10px);
-                font-size: 14px;
-            `;
-            document.body.appendChild(statutElement);
-        }
+        // Afficher la section
+        document.querySelectorAll('.app-section').forEach(sect => {
+            sect.classList.remove('active');
+        });
+        document.getElementById(`${section}-section`).classList.add('active');
         
-        if (statut === 'connecte') {
-            statutElement.textContent = '✅ En ligne';
-            statutElement.style.background = 'rgba(76, 175, 80, 0.9)';
-            statutElement.style.color = 'white';
-        } else {
-            statutElement.textContent = '❌ Hors ligne';
-            statutElement.style.background = 'rgba(244, 67, 54, 0.9)';
-            statutElement.style.color = 'white';
+        // Réinitialiser le scanner si on revient à la section scanner
+        if (section === 'scanner' && !this.cameraActive) {
+            this.demarrerScanner();
         }
     }
     
     setupEventListeners() {
-        document.getElementById('btn-charger-transaction').addEventListener('click', () => this.chargerTransaction());
-        document.getElementById('btn-payer').addEventListener('click', () => this.effectuerPaiement());
-        document.getElementById('btn-annuler').addEventListener('click', () => this.annulerTransaction());
-        document.getElementById('btn-nouvelle-transaction').addEventListener('click', () => this.nouvelleTransaction());
+        // Boutons dépôt
+        document.getElementById('btn-recharger').addEventListener('click', () => {
+            this.changerSection('depot');
+        });
         
-        // ÉVÉNEMENTS RECHARGE
-        document.getElementById('btn-recharger').addEventListener('click', () => this.afficherRecharge());
-        document.getElementById('btn-fermer-recharge').addEventListener('click', () => this.cacherRecharge());
-        
-        // Recharges rapides
-        document.querySelectorAll('.montant-rapide').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const montant = e.target.getAttribute('data-montant');
-                this.rechargerSolde(montant);
+        // Sélection opérateur
+        document.querySelectorAll('.operateur-card').forEach(card => {
+            card.addEventListener('click', (e) => {
+                this.selectionnerOperateur(e.currentTarget.getAttribute('data-operateur'));
             });
         });
         
-        // Recharge personnalisée
-        document.getElementById('btn-recharger-perso').addEventListener('click', () => {
-            const montant = document.getElementById('montant-personnalise').value;
-            if (montant && montant > 0) {
-                this.rechargerSolde(montant);
-            } else {
-                alert('Veuillez entrer un montant valide');
-            }
+        // Montants rapides
+        document.querySelectorAll('.montant-rapide').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                this.selectionnerMontantRapide(e.currentTarget.getAttribute('data-montant'));
+            });
+        });
+        
+        // Montant personnalisé
+        document.getElementById('montant-input').addEventListener('input', (e) => {
+            this.selectionnerMontantPersonnalise(e.target.value);
+        });
+        
+        // Confirmation dépôt
+        document.getElementById('btn-confirmer-depot').addEventListener('click', () => {
+            this.effectuerDepot();
+        });
+        
+        // Chargement transaction manuelle
+        document.getElementById('btn-charger-transaction').addEventListener('click', () => {
+            this.chargerTransaction();
         });
         
         document.getElementById('transaction-id').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') this.chargerTransaction();
         });
+        
+        // Actions transaction
+        document.getElementById('btn-payer').addEventListener('click', () => {
+            this.effectuerPaiement();
+        });
+        
+        document.getElementById('btn-annuler-transaction').addEventListener('click', () => {
+            this.annulerTransaction();
+        });
     }
     
-    afficherRecharge() {
-        document.getElementById('recharge-section').style.display = 'block';
-        document.getElementById('scanner-section').style.display = 'none';
-        document.getElementById('transaction-section').style.display = 'none';
+    async testerConnexionServeur() {
+        try {
+            const response = await fetch(`${this.API_URL}/api/health`);
+            if (!response.ok) throw new Error('Serveur non disponible');
+            
+            const result = await response.json();
+            this.estConnecte = true;
+            this.mettreAJourStatutConnexion(true);
+            return true;
+        } catch (error) {
+            console.error('❌ Erreur connexion serveur:', error);
+            this.estConnecte = false;
+            this.mettreAJourStatutConnexion(false);
+            return false;
+        }
     }
     
-    cacherRecharge() {
-        document.getElementById('recharge-section').style.display = 'none';
-        document.getElementById('scanner-section').style.display = 'block';
+    mettreAJourStatutConnexion(connecte) {
+        const statutElement = document.getElementById('connection-status');
+        
+        if (connecte) {
+            statutElement.innerHTML = '<div class="status-dot"></div><span>Connecté au serveur</span>';
+            statutElement.classList.remove('error');
+        } else {
+            statutElement.innerHTML = '<div class="status-dot"></div><span>Hors ligne</span>';
+            statutElement.classList.add('error');
+        }
     }
     
-    async rechargerSolde(montant) {
+    selectionnerOperateur(operateur) {
+        this.operateurSelectionne = operateur;
+        
+        // Mettre à jour l'interface
+        document.querySelectorAll('.operateur-card').forEach(card => {
+            card.classList.remove('selected');
+        });
+        document.querySelector(`[data-operateur="${operateur}"]`).classList.add('selected');
+        
+        this.calculerFrais();
+    }
+    
+    selectionnerMontantRapide(montant) {
+        this.montantSelectionne = parseInt(montant);
+        
+        // Mettre à jour l'interface
+        document.querySelectorAll('.montant-rapide').forEach(btn => {
+            btn.classList.remove('selected');
+        });
+        document.querySelector(`[data-montant="${montant}"]`).classList.add('selected');
+        
+        // Mettre à jour l'input
+        document.getElementById('montant-input').value = montant;
+        
+        this.calculerFrais();
+    }
+    
+    selectionnerMontantPersonnalise(montant) {
+        this.montantSelectionne = parseInt(montant) || 0;
+        
+        // Désélectionner les montants rapides
+        document.querySelectorAll('.montant-rapide').forEach(btn => {
+            btn.classList.remove('selected');
+        });
+        
+        this.calculerFrais();
+    }
+    
+    calculerFrais() {
+        if (!this.operateurSelectionne || this.montantSelectionne <= 0) {
+            document.getElementById('btn-confirmer-depot').disabled = true;
+            return;
+        }
+        
+        const operateur = OPERATEURS[this.operateurSelectionne];
+        const frais = Math.round(this.montantSelectionne * operateur.frais);
+        const total = this.montantSelectionne + frais;
+        
+        // Mettre à jour le résumé
+        document.getElementById('summary-montant').textContent = 
+            this.montantSelectionne.toLocaleString() + ' FCFA';
+        document.getElementById('summary-frais').textContent = 
+            frais.toLocaleString() + ' FCFA';
+        document.getElementById('summary-total').textContent = 
+            total.toLocaleString() + ' FCFA';
+        
+        // Activer le bouton
+        document.getElementById('btn-confirmer-depot').disabled = false;
+    }
+    
+    async effectuerDepot() {
         if (!this.estConnecte) {
-            alert('❌ Impossible de se connecter au serveur pour recharger');
-            await this.testerConnexionServeur();
+            this.afficherNotification('❌ Impossible de se connecter au serveur', 'error');
+            return;
+        }
+        
+        if (!this.operateurSelectionne || this.montantSelectionne <= 0) {
+            this.afficherNotification('❌ Veuillez sélectionner un opérateur et un montant', 'error');
             return;
         }
         
         try {
-            console.log('💳 Tentative de rechargement:', montant);
+            // Simulation de dépôt (dans la vraie app, intégration avec l'API de l'opérateur)
+            this.afficherNotification(`⏳ Simulation de dépôt ${this.montantSelectionne} FCFA via ${this.operateurSelectionne.toUpperCase()}...`, 'info');
+            
+            // Attendre 2 secondes pour simuler le traitement
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            // Appeler l'API pour recharger le solde
             const response = await fetch(`${this.API_URL}/api/solde/utilisateur/recharger`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ montant: parseFloat(montant) })
+                body: JSON.stringify({ 
+                    montant: this.montantSelectionne 
+                })
             });
-            
-            if (!response.ok) {
-                throw new Error(`Erreur HTTP: ${response.status}`);
-            }
             
             const result = await response.json();
             
             if (result.success) {
                 this.soldeUtilisateur = result.nouveauSolde;
                 this.mettreAJourSolde();
-                alert(`✅ ${result.message}`);
-                this.cacherRecharge();
-                document.getElementById('montant-personnalise').value = '';
+                this.afficherNotification(`✅ Dépôt réussi! +${this.montantSelectionne.toLocaleString()} FCFA`, 'success');
+                
+                // Réinitialiser le formulaire
+                this.reinitialiserFormulaireDepot();
+                this.changerSection('scanner');
+                
             } else {
-                alert('❌ Erreur: ' + result.error);
+                throw new Error(result.error);
             }
         } catch (error) {
-            console.error('Erreur rechargement:', error);
-            this.estConnecte = false;
-            this.mettreAJourStatutConnexion('erreur', error.message);
-            alert('❌ Erreur de connexion au serveur lors du rechargement');
+            console.error('Erreur dépôt:', error);
+            this.afficherNotification('❌ Erreur lors du dépôt: ' + error.message, 'error');
         }
+    }
+    
+    reinitialiserFormulaireDepot() {
+        this.operateurSelectionne = null;
+        this.montantSelectionne = 0;
+        
+        document.querySelectorAll('.operateur-card').forEach(card => {
+            card.classList.remove('selected');
+        });
+        
+        document.querySelectorAll('.montant-rapide').forEach(btn => {
+            btn.classList.remove('selected');
+        });
+        
+        document.getElementById('montant-input').value = '';
+        document.getElementById('btn-confirmer-depot').disabled = true;
+        
+        document.getElementById('summary-montant').textContent = '0 FCFA';
+        document.getElementById('summary-frais').textContent = '0 FCFA';
+        document.getElementById('summary-total').textContent = '0 FCFA';
     }
     
     async demarrerScanner() {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: "environment" } 
+                video: { 
+                    facingMode: "environment",
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                } 
             });
+            
             const video = document.getElementById('camera-feed');
             video.srcObject = stream;
             this.cameraActive = true;
             
-            this.scannerQRCode(stream);
+            this.scannerQRCode();
+            
         } catch (error) {
-            console.error('Erreur accès caméra:', error);
-            document.getElementById('scanner-section').innerHTML += 
-                '<p style="color: #ff6b6b; margin-top: 10px;">📷 Impossible d\'accéder à la caméra</p>';
+            console.error('❌ Erreur accès caméra:', error);
+            this.afficherNotification('📷 Impossible d\'accéder à la caméra', 'error');
         }
     }
     
-    scannerQRCode(stream) {
+    scannerQRCode() {
         const video = document.getElementById('camera-feed');
         const canvas = document.createElement('canvas');
         const context = canvas.getContext('2d');
@@ -201,19 +311,23 @@ class UtilisateurApp {
                 
                 if (code) {
                     try {
-                        console.log('📱 QR code détecté:', code.data);
                         const data = JSON.parse(code.data);
                         if (data.transactionId) {
+                            this.jouerSon('scan');
                             this.arreterCamera();
                             this.chargerTransaction(data.transactionId);
                         }
                     } catch (e) {
-                        console.log('QR code non reconnu:', e);
+                        console.log('QR code non reconnu');
                     }
                 }
             }
-            requestAnimationFrame(scanFrame);
+            
+            if (this.cameraActive) {
+                requestAnimationFrame(scanFrame);
+            }
         };
+        
         scanFrame();
     }
     
@@ -221,9 +335,11 @@ class UtilisateurApp {
         if (this.cameraActive) {
             const video = document.getElementById('camera-feed');
             const stream = video.srcObject;
+            
             if (stream) {
                 stream.getTracks().forEach(track => track.stop());
             }
+            
             this.cameraActive = false;
         }
     }
@@ -232,19 +348,18 @@ class UtilisateurApp {
         const id = transactionId || document.getElementById('transaction-id').value.trim();
         
         if (!id) {
-            alert('Veuillez saisir un ID de transaction');
+            this.afficherNotification('❌ Veuillez saisir un ID de transaction', 'error');
             return;
         }
-
-        console.log('🔄 Chargement transaction:', id);
         
         if (!this.estConnecte) {
-            alert('❌ Impossible de se connecter au serveur');
-            await this.testerConnexionServeur();
+            this.afficherNotification('❌ Impossible de se connecter au serveur', 'error');
             return;
         }
         
         try {
+            this.afficherNotification('🔍 Chargement de la transaction...', 'info');
+            
             const response = await fetch(`${this.API_URL}/api/transaction/${id}`);
             
             if (!response.ok) {
@@ -252,64 +367,54 @@ class UtilisateurApp {
             }
             
             const result = await response.json();
-            console.log('📄 Résultat transaction:', result);
             
             if (result.success) {
                 this.transactionActuelle = result.data;
                 this.afficherDetailsTransaction();
+                this.changerSection('transaction');
+                this.afficherNotification('✅ Transaction chargée avec succès', 'success');
             } else {
-                alert('❌ ' + (result.error || 'Transaction non trouvée'));
+                throw new Error(result.error || 'Transaction non trouvée');
             }
         } catch (error) {
             console.error('Erreur chargement transaction:', error);
-            this.estConnecte = false;
-            this.mettreAJourStatutConnexion('erreur', error.message);
-            alert('❌ Erreur de connexion au serveur. Vérifiez:\n• Votre connexion internet\n• Que l\'ID de transaction est correct');
+            this.afficherNotification('❌ ' + error.message, 'error');
         }
     }
     
     afficherDetailsTransaction() {
-        const scannerSection = document.getElementById('scanner-section');
-        const transactionSection = document.getElementById('transaction-section');
-        const rechargeSection = document.getElementById('recharge-section');
-        
-        scannerSection.style.display = 'none';
-        transactionSection.style.display = 'block';
-        rechargeSection.style.display = 'none';
+        if (!this.transactionActuelle) return;
         
         document.getElementById('detail-transaction-id').textContent = this.transactionActuelle.id;
-        document.getElementById('detail-montant').textContent = this.transactionActuelle.montant.toFixed(2);
-        document.getElementById('detail-statut').textContent = this.getStatutText(this.transactionActuelle.statut);
+        document.getElementById('detail-montant').textContent = 
+            Math.round(this.transactionActuelle.montant).toLocaleString() + ' FCFA';
+        
+        const statutElement = document.getElementById('detail-statut');
+        statutElement.textContent = this.getStatutText(this.transactionActuelle.statut);
+        statutElement.className = 'statut-badge ' + this.transactionActuelle.statut;
         
         this.afficherBoissonsTransaction();
         
+        // Activer/désactiver le bouton de paiement
         const btnPayer = document.getElementById('btn-payer');
-        const estPayable = this.transactionActuelle.statut === 'en_attente' && this.estConnecte;
-        
-        btnPayer.disabled = !estPayable;
-        
-        if (this.transactionActuelle.statut !== 'en_attente') {
-            btnPayer.textContent = 'Transaction ' + this.getStatutText(this.transactionActuelle.statut);
-        } else if (!this.estConnecte) {
-            btnPayer.textContent = 'Serveur hors ligne';
-        } else {
-            btnPayer.textContent = 'Confirmer le Paiement';
-        }
+        btnPayer.disabled = this.transactionActuelle.statut !== 'en_attente';
     }
     
     afficherBoissonsTransaction() {
         const listeElement = document.getElementById('liste-boissons');
         listeElement.innerHTML = '';
         
-        this.transactionActuelle.boissons.forEach(boisson => {
-            const item = document.createElement('div');
-            item.className = 'item-boisson';
-            item.innerHTML = `
-                <span>${boisson.icone || '🥤'} ${boisson.nom}</span>
-                <span>${boisson.prix.toFixed(2)}€</span>
-            `;
-            listeElement.appendChild(item);
-        });
+        if (this.transactionActuelle.boissons && Array.isArray(this.transactionActuelle.boissons)) {
+            this.transactionActuelle.boissons.forEach(boisson => {
+                const item = document.createElement('div');
+                item.className = 'item-boisson';
+                item.innerHTML = `
+                    <span>${boisson.icone || '🥤'} ${boisson.nom}</span>
+                    <span>${boisson.prix ? boisson.prix.toLocaleString() : '0'} FCFA</span>
+                `;
+                listeElement.appendChild(item);
+            });
+        }
     }
     
     getStatutText(statut) {
@@ -324,20 +429,16 @@ class UtilisateurApp {
     
     async effectuerPaiement() {
         if (!this.transactionActuelle || !this.estConnecte) {
-            alert('❌ Impossible de se connecter au serveur');
-            await this.testerConnexionServeur();
+            this.afficherNotification('❌ Impossible de se connecter au serveur', 'error');
             return;
         }
         
         try {
-            console.log('💸 Tentative de paiement:', this.transactionActuelle.id);
+            this.afficherNotification('💳 Traitement du paiement...', 'info');
+            
             const response = await fetch(`${this.API_URL}/api/transaction/${this.transactionActuelle.id}/payer`, {
                 method: 'POST'
             });
-            
-            if (!response.ok) {
-                throw new Error(`Erreur HTTP: ${response.status}`);
-            }
             
             const result = await response.json();
             
@@ -345,55 +446,43 @@ class UtilisateurApp {
                 this.soldeUtilisateur = result.nouveauSoldeUtilisateur;
                 this.mettreAJourSolde();
                 this.ajouterAHistorique(this.transactionActuelle);
-                this.afficherConfirmationPaiement();
-                console.log('✅ Paiement réussi');
+                this.jouerSon('success');
+                this.afficherConfirmationPaiement(result.data);
             } else {
-                alert('❌ Erreur: ' + result.error);
+                throw new Error(result.error);
             }
         } catch (error) {
             console.error('Erreur paiement:', error);
-            this.estConnecte = false;
-            this.mettreAJourStatutConnexion('erreur', error.message);
-            alert('❌ Erreur de connexion au serveur lors du paiement');
+            this.afficherNotification('❌ Erreur de paiement: ' + error.message, 'error');
         }
     }
     
-    afficherConfirmationPaiement() {
-        document.getElementById('confirmation-paiement').style.display = 'flex';
+    afficherConfirmationPaiement(transaction) {
+        document.getElementById('modal-transaction-id').textContent = transaction.id;
+        document.getElementById('modal-montant').textContent = 
+            Math.round(transaction.montant).toLocaleString() + ' FCFA';
+        document.getElementById('modal-solde').textContent = 
+            Math.round(this.soldeUtilisateur).toLocaleString() + ' FCFA';
+        
+        this.afficherModal();
+    }
+    
+    afficherModal() {
+        document.getElementById('confirmation-modal').classList.add('active');
+    }
+    
+    cacherModal() {
+        document.getElementById('confirmation-modal').classList.remove('active');
     }
     
     annulerTransaction() {
-        this.retournerAuScanner();
-    }
-    
-    nouvelleTransaction() {
-        document.getElementById('confirmation-paiement').style.display = 'none';
-        this.retournerAuScanner();
-    }
-    
-    retournerAuScanner() {
-        const scannerSection = document.getElementById('scanner-section');
-        const transactionSection = document.getElementById('transaction-section');
-        const rechargeSection = document.getElementById('recharge-section');
-        
-        scannerSection.style.display = 'block';
-        transactionSection.style.display = 'none';
-        rechargeSection.style.display = 'none';
-        
-        document.getElementById('transaction-id').value = '';
-        this.transactionActuelle = null;
-        
+        this.changerSection('scanner');
         this.demarrerScanner();
     }
     
     async chargerSolde() {
         try {
             const response = await fetch(`${this.API_URL}/api/solde/utilisateur`);
-            
-            if (!response.ok) {
-                throw new Error(`Erreur HTTP: ${response.status}`);
-            }
-            
             const result = await response.json();
             
             if (result.success) {
@@ -402,23 +491,26 @@ class UtilisateurApp {
             }
         } catch (error) {
             console.error('Erreur chargement solde:', error);
-            this.estConnecte = false;
-            this.mettreAJourStatutConnexion('erreur', error.message);
         }
     }
     
     mettreAJourSolde() {
-        document.getElementById('solde-utilisateur').textContent = this.soldeUtilisateur.toFixed(2);
+        document.getElementById('solde-utilisateur').textContent = 
+            Math.round(this.soldeUtilisateur).toLocaleString() + ' FCFA';
+        
+        document.getElementById('last-update').textContent = 'Maintenant';
     }
     
     ajouterAHistorique(transaction) {
         this.historique.unshift({
             ...transaction,
-            date: new Date().toISOString()
+            date: new Date().toISOString(),
+            type: 'paiement'
         });
         
-        if (this.historique.length > 10) {
-            this.historique = this.historique.slice(0, 10);
+        // Garder seulement les 20 dernières transactions
+        if (this.historique.length > 20) {
+            this.historique = this.historique.slice(0, 20);
         }
         
         this.mettreAJourHistorique();
@@ -426,32 +518,144 @@ class UtilisateurApp {
     
     mettreAJourHistorique() {
         const historiqueElement = document.getElementById('historique-transactions');
-        historiqueElement.innerHTML = '';
+        const statTotal = document.getElementById('stat-total');
+        const statMontantTotal = document.getElementById('stat-montant-total');
         
-        this.historique.forEach(transaction => {
-            const item = document.createElement('div');
-            item.className = `transaction-historique ${transaction.statut}`;
-            item.innerHTML = `
-                <div>
-                    <div>${new Date(transaction.date).toLocaleDateString()}</div>
-                    <div style="font-size: 0.8rem; opacity: 0.8;">${transaction.id}</div>
-                </div>
-                <div style="text-align: right;">
-                    <div>${transaction.montant.toFixed(2)}€</div>
-                    <div style="font-size: 0.8rem; opacity: 0.8;">${this.getStatutText(transaction.statut)}</div>
+        // Mettre à jour les stats
+        statTotal.textContent = this.historique.length;
+        
+        const montantTotal = this.historique.reduce((sum, transaction) => {
+            return sum + (transaction.montant || 0);
+        }, 0);
+        
+        statMontantTotal.textContent = Math.round(montantTotal).toLocaleString() + ' FCFA';
+        
+        // Mettre à jour la liste
+        if (this.historique.length === 0) {
+            historiqueElement.innerHTML = `
+                <div class="historique-vide">
+                    <div class="empty-icon">📊</div>
+                    <p>Aucune transaction pour le moment</p>
+                    <p class="empty-sub">Vos transactions apparaîtront ici</p>
                 </div>
             `;
-            historiqueElement.appendChild(item);
-        });
+        } else {
+            historiqueElement.innerHTML = '';
+            this.historique.forEach(transaction => {
+                const item = document.createElement('div');
+                item.className = `transaction-historique ${transaction.statut}`;
+                item.innerHTML = `
+                    <div>
+                        <div style="font-weight: 600;">${transaction.id}</div>
+                        <div style="font-size: 0.8rem; color: var(--text-light);">
+                            ${new Date(transaction.date).toLocaleDateString()}
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-weight: 600; color: var(--primary-color);">
+                            ${Math.round(transaction.montant || 0).toLocaleString()} FCFA
+                        </div>
+                        <div style="font-size: 0.8rem; color: var(--text-light);">
+                            ${this.getStatutText(transaction.statut)}
+                        </div>
+                    </div>
+                `;
+                historiqueElement.appendChild(item);
+            });
+        }
     }
     
     async chargerHistorique() {
-        this.historique = [];
+        // Simulation - dans une vraie app, charger depuis l'API
+        this.historique = [
+            {
+                id: 'TXABC123',
+                montant: 1200,
+                statut: 'paye',
+                date: new Date(Date.now() - 86400000).toISOString(),
+                type: 'paiement'
+            },
+            {
+                id: 'TXDEF456',
+                montant: 600,
+                statut: 'annule',
+                date: new Date(Date.now() - 172800000).toISOString(),
+                type: 'paiement'
+            }
+        ];
+        
         this.mettreAJourHistorique();
+    }
+    
+    jouerSon(type) {
+        const audio = document.getElementById(`sound-${type}`);
+        if (audio) {
+            audio.currentTime = 0;
+            audio.play().catch(e => console.log('Son non joué:', e));
+        }
+    }
+    
+    afficherNotification(message, type = 'info') {
+        // Créer une notification
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: ${type === 'success' ? '#4CAF50' : type === 'error' ? '#f44336' : '#2196F3'};
+            color: white;
+            padding: 15px 20px;
+            border-radius: 12px;
+            font-weight: 600;
+            z-index: 10000;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            animation: notificationSlideIn 0.3s ease;
+            max-width: 300px;
+            text-align: center;
+        `;
+        
+        notification.textContent = message;
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.style.animation = 'notificationSlideOut 0.3s ease';
+            setTimeout(() => {
+                if (document.body.contains(notification)) {
+                    document.body.removeChild(notification);
+                }
+            }, 300);
+        }, 3000);
     }
 }
 
-// Initialiser immédiatement au chargement
+// Initialiser l'application
 document.addEventListener('DOMContentLoaded', function() {
-    window.utilisateurApp = new UtilisateurApp();
+    window.ctlPayApp = new CTLPayApp();
 });
+
+// Ajouter les animations CSS pour les notifications
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes notificationSlideIn {
+        from {
+            opacity: 0;
+            transform: translateX(-50%) translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+    }
+    @keyframes notificationSlideOut {
+        from {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        to {
+            opacity: 0;
+            transform: translateX(-50%) translateY(-20px);
+        }
+    }
+`;
+document.head.appendChild(style);
