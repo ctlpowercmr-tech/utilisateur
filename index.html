@@ -3,216 +3,203 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CTL-PAY - Paiement Mobile</title>
+    <title>CTL-Pay - Paiement Mobile</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 </head>
 <body>
     <div class="app-container">
-        <!-- Header Application -->
+        <!-- Header -->
         <header class="app-header">
             <div class="header-content">
-                <div class="logo-app">
-                    <div class="logo-icon">💳</div>
-                    <div class="logo-text">
-                        <div class="logo-main">CTL-PAY</div>
-                        <div class="logo-sub">Mobile Payment</div>
-                    </div>
+                <div class="logo-section">
+                    <div class="app-logo">💳 CTL-PAY</div>
+                    <div class="app-tagline">Paiement Mobile Sécurisé</div>
                 </div>
-                <div class="header-actions">
-                    <button class="btn-notification">
-                        <span class="notification-badge">3</span>
-                        🔔
-                    </button>
+                <div class="user-info">
+                    <div class="solde-utilisateur">
+                        <span class="solde-label">Solde:</span>
+                        <span class="solde-montant" id="solde-utilisateur">0</span>
+                        <span class="solde-devise">FCFA</span>
+                        <button id="btn-recharger" class="btn-recharger" title="Recharger">
+                            <span class="recharger-icon">💰</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </header>
 
-        <!-- Solde Utilisateur -->
-        <section class="solde-section">
-            <div class="solde-card">
-                <div class="solde-info">
-                    <div class="solde-label">Votre Solde</div>
-                    <div class="solde-montant" id="solde-utilisateur">0 FCFA</div>
-                    <div class="solde-details">Dernière mise à jour: <span id="last-update">Maintenant</span></div>
-                </div>
-                <div class="solde-actions">
-                    <button id="btn-recharger" class="btn-recharger">
-                        <span class="btn-icon">➕</span>
-                        Recharger
-                    </button>
-                </div>
-            </div>
-        </section>
-
-        <!-- Navigation Rapide -->
-        <nav class="quick-nav">
-            <button class="quick-btn active" data-section="scanner">
-                <div class="quick-icon">📱</div>
-                <span>Scanner</span>
+        <!-- Navigation -->
+        <nav class="app-nav">
+            <button class="nav-btn active" data-section="scanner">
+                <span class="nav-icon">📱</span>
+                <span class="nav-text">Scanner</span>
             </button>
-            <button class="quick-btn" data-section="depot">
-                <div class="quick-icon">💰</div>
-                <span>Dépôt</span>
+            <button class="nav-btn" data-section="recharge">
+                <span class="nav-icon">💳</span>
+                <span class="nav-text">Recharger</span>
             </button>
-            <button class="quick-btn" data-section="historique">
-                <div class="quick-icon">📊</div>
-                <span>Historique</span>
-            </button>
-            <button class="quick-btn" data-section="profil">
-                <div class="quick-icon">👤</div>
-                <span>Profil</span>
+            <button class="nav-btn" data-section="historique">
+                <span class="nav-icon">📊</span>
+                <span class="nav-text">Historique</span>
             </button>
         </nav>
 
-        <!-- Contenu Principal -->
+        <!-- Main Content -->
         <main class="app-main">
             <!-- Section Scanner -->
             <section class="app-section active" id="scanner-section">
                 <div class="section-header">
-                    <h2>Scanner QR Code</h2>
-                    <div class="section-badge">Recommandé</div>
+                    <h1>Scanner le QR Code</h1>
+                    <p>Scannez le code QR du distributeur CTL-Power</p>
                 </div>
 
                 <div class="scanner-container">
                     <div class="scanner-frame">
-                        <video id="camera-feed" width="300" height="300" autoplay playsinline></video>
+                        <video id="camera-feed" width="320" height="320" autoplay playsinline></video>
                         <div class="scanner-overlay">
                             <div class="scan-animation"></div>
                         </div>
-                        <div class="scanner-corner top-left"></div>
-                        <div class="scanner-corner top-right"></div>
-                        <div class="scanner-corner bottom-left"></div>
-                        <div class="scanner-corner bottom-right"></div>
+                        <div class="scanner-guidelines">
+                            <div class="guide-line top-left"></div>
+                            <div class="guide-line top-right"></div>
+                            <div class="guide-line bottom-left"></div>
+                            <div class="guide-line bottom-right"></div>
+                        </div>
                     </div>
                     
-                    <div class="scanner-instructions">
-                        <p>📱 Positionnez le QR code dans le cadre pour scanner</p>
-                        <p class="instruction-alt">ou saisissez manuellement l'ID de transaction</p>
+                    <div class="scanner-controls">
+                        <button id="btn-activer-camera" class="btn-camera">
+                            📷 Activer la caméra
+                        </button>
+                        <button id="btn-desactiver-camera" class="btn-camera secondary" style="display: none;">
+                            ❌ Arrêter
+                        </button>
                     </div>
 
                     <div class="manual-input">
                         <div class="input-group">
-                            <input type="text" id="transaction-id" placeholder="Ex: TXA1B2C3D">
-                            <button id="btn-charger-transaction" class="btn-manual">
-                                <span class="btn-icon">🔍</span>
+                            <input type="text" id="transaction-id" placeholder="Ou entrer l'ID CTL (ex: CTL123456)" maxlength="9">
+                            <button id="btn-charger-transaction" class="btn-charger">
                                 Charger
                             </button>
                         </div>
                     </div>
                 </div>
+
+                <div class="scanner-features">
+                    <div class="feature-card">
+                        <div class="feature-icon">⚡</div>
+                        <div class="feature-text">Paiement Instantané</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🔒</div>
+                        <div class="feature-text">100% Sécurisé</div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🔄</div>
+                        <div class="feature-text">24h/24</div>
+                    </div>
+                </div>
             </section>
 
-            <!-- Section Dépôt -->
-            <section class="app-section" id="depot-section">
+            <!-- Section Recharge -->
+            <section class="app-section" id="recharge-section">
                 <div class="section-header">
-                    <h2>Recharger Votre Solde</h2>
-                    <div class="section-badge">Instantané</div>
+                    <h1>Recharger votre solde</h1>
+                    <p>Choisissez votre opérateur et le montant</p>
                 </div>
 
-                <div class="depot-container">
+                <div class="recharge-content">
+                    <!-- Sélection d'opérateur -->
                     <div class="operateur-selection">
-                        <h3>Sélectionnez votre opérateur</h3>
+                        <h3>Opérateur Mobile</h3>
                         <div class="operateurs-grid">
                             <div class="operateur-card" data-operateur="orange">
-                                <div class="operateur-logo orange">🎯 ORANGE</div>
-                                <div class="operateur-info">
-                                    <div class="operateur-fee">Frais: 1%</div>
-                                    <div class="operateur-speed">⚡ Instantané</div>
-                                </div>
+                                <div class="operateur-icon" style="background: #FF6600;">🟠</div>
+                                <div class="operateur-nom">Orange Money</div>
+                                <div class="operateur-check">✓</div>
                             </div>
                             <div class="operateur-card" data-operateur="mtn">
-                                <div class="operateur-logo mtn">🔷 MTN</div>
-                                <div class="operateur-info">
-                                    <div class="operateur-fee">Frais: 1.5%</div>
-                                    <div class="operateur-speed">⚡ Instantané</div>
-                                </div>
+                                <div class="operateur-icon" style="background: #FFCC00;">🟡</div>
+                                <div class="operateur-nom">MTN Mobile Money</div>
+                                <div class="operateur-check">✓</div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="montant-selection">
-                        <h3>Montant de recharge</h3>
-                        <div class="montants-rapides">
-                            <div class="montant-rapide" data-montant="1000">1 000 FCFA</div>
-                            <div class="montant-rapide" data-montant="2000">2 000 FCFA</div>
-                            <div class="montant-rapide" data-montant="5000">5 000 FCFA</div>
-                            <div class="montant-rapide" data-montant="10000">10 000 FCFA</div>
-                        </div>
-
-                        <div class="montant-personnalise">
-                            <label for="montant-input">Montant personnalisé</label>
-                            <div class="input-with-symbol">
-                                <input type="number" id="montant-input" placeholder="Entrez le montant">
-                                <span class="input-symbol">FCFA</span>
+                    <!-- Montants rapides -->
+                    <div class="montants-rapides">
+                        <h3>Montants Rapides</h3>
+                        <div class="montants-grid">
+                            <div class="montant-rapide" data-montant="1000">
+                                <div class="montant">1 000</div>
+                                <div class="devise">FCFA</div>
+                            </div>
+                            <div class="montant-rapide" data-montant="2000">
+                                <div class="montant">2 000</div>
+                                <div class="devise">FCFA</div>
+                            </div>
+                            <div class="montant-rapide" data-montant="5000">
+                                <div class="montant">5 000</div>
+                                <div class="devise">FCFA</div>
+                            </div>
+                            <div class="montant-rapide" data-montant="10000">
+                                <div class="montant">10 000</div>
+                                <div class="devise">FCFA</div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="depot-summary">
-                        <div class="summary-item">
-                            <span>Montant:</span>
-                            <span id="summary-montant">0 FCFA</span>
+                    <!-- Montant personnalisé -->
+                    <div class="montant-personnalise">
+                        <h3>Montant Personnalisé</h3>
+                        <div class="input-group-personnalise">
+                            <input type="number" id="montant-personnalise" placeholder="Entrez le montant" min="100" step="100">
+                            <span class="devise-input">FCFA</span>
                         </div>
-                        <div class="summary-item">
-                            <span>Frais:</span>
-                            <span id="summary-frais">0 FCFA</span>
-                        </div>
-                        <div class="summary-item total">
-                            <span>Total à payer:</span>
-                            <span id="summary-total">0 FCFA</span>
-                        </div>
+                        <button id="btn-recharger-perso" class="btn-recharger-perso">
+                            💰 Recharger
+                        </button>
                     </div>
-
-                    <button id="btn-confirmer-depot" class="btn-depot" disabled>
-                        <span class="btn-icon">💳</span>
-                        Confirmer le Dépôt
-                    </button>
                 </div>
             </section>
 
             <!-- Section Transaction -->
             <section class="app-section" id="transaction-section">
-                <div class="transaction-header">
-                    <button class="btn-back" id="btn-back-transaction">
-                        <span class="btn-icon">⬅️</span>
-                        Retour
-                    </button>
-                    <h2>Détails Transaction</h2>
+                <div class="section-header">
+                    <h1>Détails de la transaction</h1>
+                    <p>Vérifiez et confirmez le paiement</p>
                 </div>
 
-                <div class="transaction-card">
-                    <div class="transaction-id">
-                        <span>ID:</span>
-                        <span id="detail-transaction-id" class="transaction-value">-</span>
-                    </div>
-                    
-                    <div class="transaction-montant">
-                        <span>Montant:</span>
-                        <span id="detail-montant" class="transaction-value">0 FCFA</span>
-                    </div>
-
-                    <div class="transaction-statut">
-                        <span>Statut:</span>
-                        <span id="detail-statut" class="statut-badge">-</span>
-                    </div>
-
-                    <div class="transaction-boissons">
-                        <h4>🥤 Boissons sélectionnées</h4>
-                        <div id="liste-boissons" class="liste-boissons">
-                            <!-- Liste générée dynamiquement -->
+                <div class="transaction-content">
+                    <div class="transaction-card">
+                        <div class="transaction-header">
+                            <div class="transaction-id">ID: <span id="detail-transaction-id">-</span></div>
+                            <div class="transaction-statut" id="detail-statut">-</div>
                         </div>
-                    </div>
+                        
+                        <div class="transaction-montant">
+                            <span class="montant-label">Montant à payer:</span>
+                            <span class="montant-valeur" id="detail-montant">0</span>
+                            <span class="montant-devise">FCFA</span>
+                        </div>
 
-                    <div class="transaction-actions">
-                        <button id="btn-payer" class="btn-payer-transaction">
-                            <span class="btn-icon">✅</span>
-                            Payer maintenant
-                        </button>
-                        <button id="btn-annuler-transaction" class="btn-annuler-transaction">
-                            <span class="btn-icon">❌</span>
-                            Annuler
-                        </button>
+                        <div class="boissons-transaction">
+                            <h4>Boissons sélectionnées:</h4>
+                            <div id="liste-boissons" class="liste-boissons">
+                                <!-- Liste des boissons -->
+                            </div>
+                        </div>
+
+                        <div class="transaction-actions">
+                            <button id="btn-payer" class="btn-confirmer-paiement">
+                                💳 Confirmer le Paiement
+                            </button>
+                            <button id="btn-annuler" class="btn-annuler-transaction">
+                                ❌ Annuler
+                            </button>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -220,118 +207,62 @@
             <!-- Section Historique -->
             <section class="app-section" id="historique-section">
                 <div class="section-header">
-                    <h2>Historique des Transactions</h2>
-                    <div class="section-actions">
-                        <button class="btn-filter">🔧 Filtrer</button>
-                    </div>
+                    <h1>Historique des transactions</h1>
+                    <p>Vos dernières opérations CTL-Pay</p>
                 </div>
 
-                <div class="historique-container">
-                    <div class="historique-stats">
-                        <div class="stat-mini">
-                            <div class="stat-value" id="stat-total">0</div>
-                            <div class="stat-label">Transactions</div>
-                        </div>
-                        <div class="stat-mini">
-                            <div class="stat-value" id="stat-montant-total">0 FCFA</div>
-                            <div class="stat-label">Total dépensé</div>
-                        </div>
+                <div class="historique-content">
+                    <div id="historique-transactions" class="historique-list">
+                        <!-- Transactions historiques -->
                     </div>
-
-                    <div class="historique-list" id="historique-transactions">
-                        <!-- Transactions chargées dynamiquement -->
-                        <div class="historique-vide">
-                            <div class="empty-icon">📊</div>
-                            <p>Aucune transaction pour le moment</p>
-                            <p class="empty-sub">Vos transactions apparaîtront ici</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Section Profil -->
-            <section class="app-section" id="profil-section">
-                <div class="profil-header">
-                    <div class="profil-avatar">
-                        <div class="avatar">👤</div>
-                    </div>
-                    <div class="profil-info">
-                        <h3>Utilisateur CTL-PAY</h3>
-                        <p>Membre depuis 2024</p>
-                    </div>
-                </div>
-
-                <div class="profil-menu">
-                    <div class="menu-item">
-                        <div class="menu-icon">⚙️</div>
-                        <div class="menu-text">Paramètres</div>
-                        <div class="menu-arrow">›</div>
-                    </div>
-                    <div class="menu-item">
-                        <div class="menu-icon">🔒</div>
-                        <div class="menu-text">Sécurité</div>
-                        <div class="menu-arrow">›</div>
-                    </div>
-                    <div class="menu-item">
-                        <div class="menu-icon">💬</div>
-                        <div class="menu-text">Support</div>
-                        <div class="menu-arrow">›</div>
-                    </div>
-                    <div class="menu-item">
-                        <div class="menu-icon">📱</div>
-                        <div class="menu-text">À propos</div>
-                        <div class="menu-arrow">›</div>
+                    
+                    <div class="historique-vide" id="historique-vide">
+                        <div class="vide-icon">📊</div>
+                        <div class="vide-text">Aucune transaction</div>
+                        <div class="vide-sous-text">Vos transactions apparaîtront ici</div>
                     </div>
                 </div>
             </section>
         </main>
 
-        <!-- Modal Confirmation Paiement -->
-        <div class="modal-overlay" id="confirmation-modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <div class="modal-icon">✅</div>
-                    <h3>Paiement Réussi!</h3>
-                </div>
-                <div class="modal-body">
+        <!-- Confirmation de Paiement -->
+        <div class="confirmation-overlay" id="confirmation-paiement">
+            <div class="confirmation-modal">
+                <div class="confirmation-content">
+                    <div class="confirmation-icon">✅</div>
+                    <h2>Paiement Réussi!</h2>
                     <p>Votre transaction a été traitée avec succès.</p>
-                    <div class="transaction-resume">
-                        <div class="resume-item">
+                    <div class="confirmation-details">
+                        <div class="detail-item">
                             <span>ID Transaction:</span>
-                            <span id="modal-transaction-id">-</span>
+                            <strong id="confirmation-id">-</strong>
                         </div>
-                        <div class="resume-item">
+                        <div class="detail-item">
                             <span>Montant:</span>
-                            <span id="modal-montant">0 FCFA</span>
+                            <strong id="confirmation-montant">0</strong> FCFA
                         </div>
-                        <div class="resume-item">
+                        <div class="detail-item">
                             <span>Nouveau solde:</span>
-                            <span id="modal-solde">0 FCFA</span>
+                            <strong id="confirmation-solde">0</strong> FCFA
                         </div>
                     </div>
-                </div>
-                <div class="modal-actions">
-                    <button id="btn-modal-ok" class="btn-modal-ok">
-                        <span class="btn-icon">👍</span>
-                        Super!
+                    <button id="btn-nouvelle-transaction" class="btn-nouvelle">
+                        🎉 Nouvelle Transaction
                     </button>
                 </div>
             </div>
         </div>
 
+        <!-- Notification -->
+        <div id="notification" class="notification"></div>
+
         <!-- Statut Connexion -->
-        <div class="connection-status" id="connection-status">
-            <div class="status-dot"></div>
-            <span>Connecté au serveur</span>
-        </div>
+        <div id="statut-connexion" class="statut-connexion"></div>
     </div>
 
-    <!-- Sons -->
-    <audio id="sound-scan" preload="auto">
-        <source src="https://assets.mixkit.co/sfx/preview/mixkit-software-interface-start-2574.mp3" type="audio/mpeg">
-    </audio>
-    <audio id="sound-success" preload="auto">
-        <source src="https://assets.mixkit.co/sfx/preview/mixkit-unlock-game-notification-253.mp3" type="audio/mpeg">
+    <!-- Son de scan -->
+    <audio id="scan-sound" preload="auto">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-select-click-1109.mp3" type="audio/mpeg">
     </audio>
 
     <script src="config.js"></script>
